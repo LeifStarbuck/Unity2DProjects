@@ -5,8 +5,7 @@ public class PlayerMove : MonoBehaviour
 {
     [SerializeField] private float moveSpeed = 6f;
     [SerializeField] private float jumpForce = 6f;
-    
-[SerializeField] private FeetGroundCheck feet;
+    [SerializeField] private FeetGroundCheck feet;
 
     private bool isGrounded;
     private int facing = 1;
