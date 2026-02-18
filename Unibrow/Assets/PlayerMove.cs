@@ -87,9 +87,7 @@ public class PlayerMove : MonoBehaviour
         var kb = Keyboard.current;
         if (kb == null) return;
 
-        // Jump start\
-        if (jumpBufferCounter > 0f && feet != null && feet.IsGrounded)
-        //if (kb.spaceKey.wasPressedThisFrame && feet != null && feet.IsGrounded)
+        if (jumpBufferCounter > 0f && feet != null && feet.IsGrounded && !isJumping)
         {
             // Reset vertical velocity so jump is consistent
             rb.linearVelocity = new Vector2(rb.linearVelocity.x, 0f);
@@ -100,7 +98,10 @@ public class PlayerMove : MonoBehaviour
             // Enable hold-to-jump-higher window
             isJumping = true;
             holdTimer = maxHoldTime;
+
+            jumpBufferCounter = 0f;   // ✅ consume buffer here
         }
+
 
         // Hold: apply a bit of upward force while the player holds Space (limited time)
         if (isJumping && kb.spaceKey.isPressed && holdTimer > 0f)
@@ -118,7 +119,6 @@ public class PlayerMove : MonoBehaviour
             }
 
             isJumping = false;
-            jumpBufferCounter = 0f;
 
             holdTimer = 0f;
         }
