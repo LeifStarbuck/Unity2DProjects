@@ -33,6 +33,8 @@ public class PlayerMove : MonoBehaviour
     private float dashTimeLeft = 0f;
     private float dashCooldownLeft = 0f;
 
+    private bool canDash = true;
+
 
 
     void Awake()
@@ -43,6 +45,8 @@ public class PlayerMove : MonoBehaviour
 
     void Update()
     {
+        if (feet != null && feet.IsGrounded) canDash = true;
+
         Dash();   // handle starting + timers
         if (!isDashing)
         {
@@ -140,8 +144,9 @@ public class PlayerMove : MonoBehaviour
             dashCooldownLeft -= Time.deltaTime;
 
         // start dash on C
-        if (!isDashing && dashCooldownLeft <= 0f && kb.cKey.wasPressedThisFrame)
+        if (!isDashing && canDash && dashCooldownLeft <= 0f && kb.cKey.wasPressedThisFrame)
         {
+            canDash = false;
             isDashing = true;
             dashTimeLeft = dashDuration;
             dashCooldownLeft = dashCooldown;
