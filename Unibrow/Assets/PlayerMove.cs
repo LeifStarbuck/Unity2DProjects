@@ -5,7 +5,12 @@ public class PlayerMove : MonoBehaviour
 {
     [SerializeField] private float moveSpeed = 6f;
     [SerializeField] private float jumpForce = 6f;
+
+    [SerializeField] private ParticleSystem dustPrefab;
+    //[SerializeField] private Transform feet;
     [SerializeField] private FeetGroundCheck feet;
+
+    [SerializeField] private Vector2 dustOffset = new Vector2(0f, -0.5f);
 
     [Header("Jump Tuning")]
     [SerializeField] private float jumpImpulse = 10f;      // initial kick
@@ -93,6 +98,9 @@ public class PlayerMove : MonoBehaviour
 
         if (jumpBufferCounter > 0f && feet != null && feet.IsGrounded && !isJumping)
         {
+
+            SpawnDust();
+
             // Reset vertical velocity so jump is consistent
             rb.linearVelocity = new Vector2(rb.linearVelocity.x, 0f);
 
@@ -146,6 +154,7 @@ public class PlayerMove : MonoBehaviour
         // start dash on C
         if (!isDashing && canDash && dashCooldownLeft <= 0f && kb.cKey.wasPressedThisFrame)
         {
+            SpawnDust();
             canDash = false;
             isDashing = true;
             dashTimeLeft = dashDuration;
@@ -167,6 +176,17 @@ public class PlayerMove : MonoBehaviour
                 isDashing = false;
             }
         }
+    }
+
+    void SpawnDust()
+    {
+        if (dustPrefab == null || feet == null) return;
+
+        Vector3 spawnPos = feet.transform.position + (Vector3)dustOffset;
+
+        ParticleSystem dust = Instantiate(dustPrefab, spawnPos, Quaternion.identity);
+        dust.Play();
+        Destroy(dust.gameObject, 1f);
     }
 
 }

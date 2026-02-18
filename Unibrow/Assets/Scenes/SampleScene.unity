@@ -2032,7 +2032,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerMove
   moveSpeed: 10
   jumpForce: 20
+  dustPrefab: {fileID: 6588518674708807525, guid: 5686d8767ccfe453783891d409cf6f88, type: 3}
   feet: {fileID: 1430743591}
+  dustOffset: {x: 0, y: -0.3}
   jumpImpulse: 20
   jumpCutMultiplier: 0.5
   holdForce: 20
