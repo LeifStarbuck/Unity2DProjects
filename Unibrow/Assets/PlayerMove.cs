@@ -4,7 +4,6 @@ using UnityEngine.InputSystem;
 public class PlayerMove : MonoBehaviour
 {
     [SerializeField] private float moveSpeed = 6f;
-    [SerializeField] private float jumpForce = 6f;
 
     [SerializeField] private ParticleSystem dustPrefab;
     //[SerializeField] private Transform feet;
@@ -40,6 +39,11 @@ public class PlayerMove : MonoBehaviour
 
     private bool canDash = true;
 
+    [SerializeField] private float coyoteTime = 0.12f;
+
+    private float coyoteTimer = 0f;
+
+
 
 
     void Awake()
@@ -58,6 +62,12 @@ public class PlayerMove : MonoBehaviour
             Move();
             jumpBufferCounter -= Time.deltaTime;
             if (Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame) jumpBufferCounter = jumpBufferTime;
+
+            if (feet != null && feet.IsGrounded)
+                coyoteTimer = coyoteTime;
+            else
+                coyoteTimer -= Time.deltaTime;
+
             Jump();
         }
     }
@@ -96,7 +106,7 @@ public class PlayerMove : MonoBehaviour
         var kb = Keyboard.current;
         if (kb == null) return;
 
-        if (jumpBufferCounter > 0f && feet != null && feet.IsGrounded && !isJumping)
+        if (jumpBufferCounter > 0f && coyoteTimer > 0f && !isJumping)
         {
 
             SpawnDust();
@@ -112,6 +122,8 @@ public class PlayerMove : MonoBehaviour
             holdTimer = maxHoldTime;
 
             jumpBufferCounter = 0f;   // ✅ consume buffer here
+
+            coyoteTimer = 0f;
         }
 
 
