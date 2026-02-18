@@ -13,6 +13,11 @@ public class PlayerMove : MonoBehaviour
     [SerializeField] private float holdForce = 20f;        // extra upward force while holding
     [SerializeField] private float maxHoldTime = 0.15f;    // seconds you can “hold to go higher”
 
+    [Header("Dash")]
+    [SerializeField] private float dashSpeed = 18f;
+    [SerializeField] private float dashDuration = 0.12f;
+    [SerializeField] private float dashCooldown = 0.4f;
+
 
     private bool isGrounded;
     private int facing = 1;
@@ -21,7 +26,10 @@ public class PlayerMove : MonoBehaviour
     private SpriteRenderer sr;
 
     private float holdTimer = 0f;
-private bool isJumping = false;
+    private bool isJumping = false;
+    private bool isDashing = false;
+    private float dashTimeLeft = 0f;
+    private float dashCooldownLeft = 0f;
 
 
 
@@ -33,8 +41,12 @@ private bool isJumping = false;
 
     void Update()
     {
-        Move();
-        Jump();
+        Dash();   // handle starting + timers
+        if (!isDashing)
+        {
+            Move();
+            Jump();
+        }
     }
 
 
@@ -66,52 +78,83 @@ private bool isJumping = false;
 
     }
 
-void Jump()
-{
-    var kb = Keyboard.current;
-    if (kb == null) return;
-
-    // Jump start
-    if (kb.spaceKey.wasPressedThisFrame && feet != null && feet.IsGrounded)
+    void Jump()
     {
-        // Reset vertical velocity so jump is consistent
-        rb.linearVelocity = new Vector2(rb.linearVelocity.x, 0f);
+        var kb = Keyboard.current;
+        if (kb == null) return;
 
-        // Initial jump impulse
-        rb.AddForce(Vector2.up * jumpImpulse, ForceMode2D.Impulse);
-
-        // Enable hold-to-jump-higher window
-        isJumping = true;
-        holdTimer = maxHoldTime;
-    }
-
-    // Hold: apply a bit of upward force while the player holds Space (limited time)
-    if (isJumping && kb.spaceKey.isPressed && holdTimer > 0f)
-    {
-        rb.AddForce(Vector2.up * holdForce * Time.deltaTime, ForceMode2D.Force);
-        holdTimer -= Time.deltaTime;
-    }
-
-    // Early release: cut jump short by reducing upward velocity
-    if (kb.spaceKey.wasReleasedThisFrame)
-    {
-        if (rb.linearVelocity.y > 0f)
+        // Jump start
+        if (kb.spaceKey.wasPressedThisFrame && feet != null && feet.IsGrounded)
         {
-            rb.linearVelocity = new Vector2(rb.linearVelocity.x, rb.linearVelocity.y * jumpCutMultiplier);
+            // Reset vertical velocity so jump is consistent
+            rb.linearVelocity = new Vector2(rb.linearVelocity.x, 0f);
+
+            // Initial jump impulse
+            rb.AddForce(Vector2.up * jumpImpulse, ForceMode2D.Impulse);
+
+            // Enable hold-to-jump-higher window
+            isJumping = true;
+            holdTimer = maxHoldTime;
         }
 
-        isJumping = false;
-        holdTimer = 0f;
+        // Hold: apply a bit of upward force while the player holds Space (limited time)
+        if (isJumping && kb.spaceKey.isPressed && holdTimer > 0f)
+        {
+            rb.AddForce(Vector2.up * holdForce * Time.deltaTime, ForceMode2D.Force);
+            holdTimer -= Time.deltaTime;
+        }
+
+        // Early release: cut jump short by reducing upward velocity
+        if (kb.spaceKey.wasReleasedThisFrame)
+        {
+            if (rb.linearVelocity.y > 0f)
+            {
+                rb.linearVelocity = new Vector2(rb.linearVelocity.x, rb.linearVelocity.y * jumpCutMultiplier);
+            }
+
+            isJumping = false;
+            holdTimer = 0f;
+        }
+
+        // Stop holding once you start falling
+        if (rb.linearVelocity.y <= 0f)
+        {
+            isJumping = false;
+        }
     }
 
-    // Stop holding once you start falling
-    if (rb.linearVelocity.y <= 0f)
+    void Dash()
     {
-        isJumping = false;
+        var kb = Keyboard.current;
+        if (kb == null) return;
+
+        // tick cooldown
+        if (dashCooldownLeft > 0f)
+            dashCooldownLeft -= Time.deltaTime;
+
+        // start dash on C
+        if (!isDashing && dashCooldownLeft <= 0f && kb.cKey.wasPressedThisFrame)
+        {
+            isDashing = true;
+            dashTimeLeft = dashDuration;
+            dashCooldownLeft = dashCooldown;
+
+            // optional: flatten vertical motion so dash is clean
+            rb.linearVelocity = new Vector2(rb.linearVelocity.x, 0f);
+        }
+
+        // during dash: force horizontal velocity in facing direction
+        if (isDashing)
+        {
+            dashTimeLeft -= Time.deltaTime;
+
+            rb.linearVelocity = new Vector2(facing * dashSpeed, 0f);
+
+            if (dashTimeLeft <= 0f)
+            {
+                isDashing = false;
+            }
+        }
     }
-}
-
-
-
 
 }
