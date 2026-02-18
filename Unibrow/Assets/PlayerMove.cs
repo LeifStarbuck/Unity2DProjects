@@ -18,6 +18,8 @@ public class PlayerMove : MonoBehaviour
     [SerializeField] private float dashDuration = 0.12f;
     [SerializeField] private float dashCooldown = 0.4f;
 
+    [SerializeField] private float jumpBufferTime = 0.12f;
+    private float jumpBufferCounter = 0f;
 
     private bool isGrounded;
     private int facing = 1;
@@ -45,6 +47,8 @@ public class PlayerMove : MonoBehaviour
         if (!isDashing)
         {
             Move();
+            jumpBufferCounter -= Time.deltaTime;
+            if (Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame) jumpBufferCounter = jumpBufferTime;
             Jump();
         }
     }
@@ -83,8 +87,9 @@ public class PlayerMove : MonoBehaviour
         var kb = Keyboard.current;
         if (kb == null) return;
 
-        // Jump start
-        if (kb.spaceKey.wasPressedThisFrame && feet != null && feet.IsGrounded)
+        // Jump start\
+        if (jumpBufferCounter > 0f && feet != null && feet.IsGrounded)
+        //if (kb.spaceKey.wasPressedThisFrame && feet != null && feet.IsGrounded)
         {
             // Reset vertical velocity so jump is consistent
             rb.linearVelocity = new Vector2(rb.linearVelocity.x, 0f);
@@ -113,6 +118,8 @@ public class PlayerMove : MonoBehaviour
             }
 
             isJumping = false;
+            jumpBufferCounter = 0f;
+
             holdTimer = 0f;
         }
 
