@@ -2031,7 +2031,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerMove
   moveSpeed: 10
-  jumpForce: 20
   dustPrefab: {fileID: 6588518674708807525, guid: 5686d8767ccfe453783891d409cf6f88, type: 3}
   feet: {fileID: 1430743591}
   dustOffset: {x: 0, y: -0.3}
@@ -2043,6 +2042,7 @@ MonoBehaviour:
   dashDuration: 0.12
   dashCooldown: 0.4
   jumpBufferTime: 0.12
+  coyoteTime: 0.12
 --- !u!212 &1337402223
 SpriteRenderer:
   serializedVersion: 2
@@ -2393,7 +2393,7 @@ BoxCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: -0.08074933, y: -2.9394898}
+  m_Offset: {x: -0.08074874, y: -2.9394898}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0, y: 0}
@@ -2403,7 +2403,7 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 3.321991, y: 0.9264269}
+  m_Size: {x: 2.8170018, y: 0.9264269}
   m_EdgeRadius: 0
 --- !u!4 &1430743593
 Transform:
