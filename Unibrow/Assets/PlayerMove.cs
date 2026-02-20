@@ -16,6 +16,8 @@ public class PlayerMove : MonoBehaviour
     [SerializeField] private float jumpCutMultiplier = 0.5f; // how much to reduce upward speed on early release (0.3–0.7)
     [SerializeField] private float holdForce = 20f;        // extra upward force while holding
     [SerializeField] private float maxHoldTime = 0.15f;    // seconds you can “hold to go higher”
+    [SerializeField] private float coyoteTime = 0.12f;
+
 
     [Header("Dash")]
     [SerializeField] private float dashSpeed = 18f;
@@ -24,6 +26,13 @@ public class PlayerMove : MonoBehaviour
 
     [SerializeField] private float jumpBufferTime = 0.12f;
     private float jumpBufferCounter = 0f;
+
+    [Header("Gun")]
+[SerializeField] private GameObject bulletPrefab;
+[SerializeField] private Transform firePoint;
+[SerializeField] private float fireCooldown = 0.15f;
+private float fireCooldownLeft = 0f;
+
 
     private bool isGrounded;
     private int facing = 1;
@@ -39,7 +48,6 @@ public class PlayerMove : MonoBehaviour
 
     private bool canDash = true;
 
-    [SerializeField] private float coyoteTime = 0.12f;
 
     private float coyoteTimer = 0f;
 
@@ -69,6 +77,9 @@ public class PlayerMove : MonoBehaviour
                 coyoteTimer -= Time.deltaTime;
 
             Jump();
+            fireCooldownLeft -= Time.deltaTime;
+            Shoot();
+
         }
     }
 
@@ -200,5 +211,32 @@ public class PlayerMove : MonoBehaviour
         dust.Play();
         Destroy(dust.gameObject, 1f);
     }
+void Shoot()
+{
+    var kb = Keyboard.current;
+    if (kb == null) return;
+
+    fireCooldownLeft -= Time.deltaTime;
+
+    if (kb.kKey.wasPressedThisFrame && fireCooldownLeft <= 0f)
+    {
+        // Spawn
+        GameObject obj = Instantiate(bulletPrefab, firePoint.position, Quaternion.identity);
+
+        // Prevent bullet from knocking the player
+        var bulletCol = obj.GetComponent<Collider2D>();
+        var playerCol = GetComponent<Collider2D>();
+        if (bulletCol != null && playerCol != null)
+            Physics2D.IgnoreCollision(bulletCol, playerCol);
+
+        // Fire
+        var bullet = obj.GetComponent<Bullet>();
+        if (bullet != null)
+            bullet.Fire(facing);
+
+        fireCooldownLeft = fireCooldown;
+    }
+}
+
 
 }
