@@ -15,6 +15,9 @@ public class BallCatcher : MonoBehaviour
 
 
 
+
+
+
     private Vector3 handsLocalPosRight;
     private Vector3 catchZoneLocalPosRight;
 
