@@ -92,8 +92,8 @@ private float fireCooldownLeft = 0f;
 
         float x = 0f;
 
-        if (kb.leftArrowKey.isPressed) x = -1f;
-        if (kb.rightArrowKey.isPressed) x = 1f;
+        if (kb.aKey.isPressed || kb.leftArrowKey.isPressed) x = -1f;
+        if (kb.dKey.isPressed || kb.rightArrowKey.isPressed) x = 1f;
 
         //Apply movement
         rb.linearVelocity = new Vector2(x * moveSpeed, rb.linearVelocity.y);
@@ -109,6 +109,10 @@ private float fireCooldownLeft = 0f;
             sr.flipX = true;
             facing = -1; //facing left
         }
+
+        //Flip ball if held
+        var catcher = GetComponent<BallCatcher>();
+        if (catcher != null) catcher.SetFacing(facing);
 
     }
 
