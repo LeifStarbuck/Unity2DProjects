@@ -7,12 +7,12 @@ public class CatchZone : MonoBehaviour
     void Awake()
     {
         catcher = GetComponentInParent<BallCatcher>();
-        Debug.Log($"[CatchZone] Awake. catcherFound={(catcher != null)}");
+        //Debug.Log($"[CatchZone] Awake. catcherFound={(catcher != null)}");
     }
 
     void OnTriggerEnter2D(Collider2D other)
     {
-        Debug.Log($"[CatchZone] ENTER other={other.name} tag={other.tag} layer={LayerMask.LayerToName(other.gameObject.layer)} isTrigger={other.isTrigger}");
+        //Debug.Log($"[CatchZone] ENTER other={other.name} tag={other.tag} layer={LayerMask.LayerToName(other.gameObject.layer)} isTrigger={other.isTrigger}");
         catcher?.TryCatch(other.gameObject);
     }
 
