@@ -137,7 +137,6 @@ heldBallRb.linearVelocity = new Vector2(
                 catchZoneLocalPosRight.z
             );
         }
-        Debug.Log($"[SetFacing] facing={facing} catchZone={catchZone.name} localX={catchZone.localPosition.x}");
 
 
 }
