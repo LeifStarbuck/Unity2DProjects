@@ -2,17 +2,29 @@ using UnityEngine;
 
 public class SplatterDecal : MonoBehaviour
 {
-    [SerializeField] private float fallTime = 0.12f;
-    [SerializeField] private float maxLength = 0.35f;      // world units
-    [SerializeField] private float fadeStart = 10f;        // seconds
-    [SerializeField] private float fadeEnd = 30f;          // hard cap
-    [SerializeField] private float gravity = 10f;          // visual gravity
+    [Header("Drip Growth")]
+    [Tooltip("How long the drip grows downward.")]
+    [SerializeField] private float dripDuration = 1.6f;
+
+    [Tooltip("World-units per second of extra creep after main drip finishes.")]
+    [SerializeField] private float creepSpeed = 0.00f; // try 0.02f for subtle creep
+
+    [Tooltip("Clamp final length.")]
+    [SerializeField] private float maxLength = 0.8f;
+
+    [Tooltip("Easing curve for growth. X=time(0-1), Y=length(0-1).")]
+    [SerializeField] private AnimationCurve growthCurve =
+        new AnimationCurve(new Keyframe(0, 0), new Keyframe(1, 1));
+
+    [Header("Fade + Cleanup")]
+    [SerializeField] private float fadeStart = 12f;   // start fading later for longer presence
+    [SerializeField] private float fadeEnd = 30f;     // must be <= 30s per your requirement
 
     private MaterialPropertyBlock mpb;
     private MeshRenderer mr;
+
     private float spawnTime;
     private float baseY;
-    private float velocity;
     private float targetLength;
     private float width;
 
@@ -24,20 +36,25 @@ public class SplatterDecal : MonoBehaviour
     {
         mr = GetComponent<MeshRenderer>();
         mpb = new MaterialPropertyBlock();
+
+        // Make sure the curve has sane tangents for smooth drip
+        if (growthCurve == null || growthCurve.length == 0)
+            growthCurve = AnimationCurve.EaseInOut(0, 0, 1, 1);
     }
 
     public void Init(Vector3 contactPoint, float decalWidth, float desiredLength, Color32 light, Color32 dark)
     {
         spawnTime = Time.time;
         baseY = contactPoint.y;
-        velocity = 0f;
 
-        width = decalWidth;
-        targetLength = Mathf.Clamp(desiredLength, 0.06f, maxLength);
+        width = Mathf.Max(0.02f, decalWidth);
+        targetLength = Mathf.Clamp(desiredLength, 0.08f, maxLength);
 
-        // Position: we anchor at top near contact and grow downward.
+        // Anchor at the contact point (top of drip)
         transform.position = new Vector3(contactPoint.x, contactPoint.y, transform.position.z);
-        transform.localScale = new Vector3(width, 0.02f, 1f);
+
+        // Start tiny, grow down
+        SetLength(0.02f);
 
         mr.GetPropertyBlock(mpb);
         mpb.SetColor(LightColorId, light);
@@ -52,26 +69,28 @@ public class SplatterDecal : MonoBehaviour
     {
         float age = Time.time - spawnTime;
 
-        // 1) quick "fall/lengthen" phase
-        if (age <= fallTime)
+        // Growth phase: slow drip down
+        float length;
+        if (age <= dripDuration)
         {
-            velocity += gravity * Time.deltaTime;
-            float dy = velocity * Time.deltaTime;
-
-            // push bottom down by increasing height, keep top pinned
-            float newH = Mathf.Lerp(0.02f, targetLength, age / fallTime);
-            transform.localScale = new Vector3(width, newH, 1f);
-
-            // keep top edge approximately at contact point by shifting down half height
-            transform.position = new Vector3(transform.position.x, baseY - (newH * 0.5f), transform.position.z);
+            float t = Mathf.Clamp01(age / dripDuration);
+            float eased = Mathf.Clamp01(growthCurve.Evaluate(t));
+            length = Mathf.Lerp(0.02f, targetLength, eased);
+        }
+        else
+        {
+            // Optional creep after it "lands"
+            float extra = creepSpeed * (age - dripDuration);
+            length = Mathf.Min(maxLength, targetLength + extra);
         }
 
-        // 2) very slow fade, hard cap at 30s
+        SetLength(length);
+
+        // Slow fade, hard cap
         float alpha = 1f;
         if (age > fadeStart)
         {
             float t = Mathf.InverseLerp(fadeStart, fadeEnd, age);
-            // "almost imperceptible" fade curve
             alpha = Mathf.Clamp01(1f - t);
         }
 
@@ -83,5 +102,12 @@ public class SplatterDecal : MonoBehaviour
         {
             gameObject.SetActive(false);
         }
+    }
+
+    private void SetLength(float length)
+    {
+        // Scale Y controls drip length; keep top pinned by shifting down half length
+        transform.localScale = new Vector3(width, length, 1f);
+        transform.position = new Vector3(transform.position.x, baseY - (length * 0.5f), transform.position.z);
     }
 }

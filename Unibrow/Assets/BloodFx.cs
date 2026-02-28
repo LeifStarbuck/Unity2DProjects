@@ -19,8 +19,8 @@ public class BloodFx : MonoBehaviour
 
     [Header("Splatter")]
     [SerializeField] private float splatWidth = 0.10f;
-    [SerializeField] private float splatLengthMin = 0.10f;
-    [SerializeField] private float splatLengthMax = 0.30f;
+    [SerializeField] private float splatLengthMin = 0.25f;
+    [SerializeField] private float splatLengthMax = 0.9f;
     [SerializeField] private int maxSplats = 64;
 
     private ObjectPool<SplatterDecal> splatPool;

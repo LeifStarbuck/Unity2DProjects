@@ -126,8 +126,32 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 96df220078a0e48d38438cfb5bee6b53, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SplatterDecal
-  fallTime: 0.12
-  maxLength: 0.35
-  fadeStart: 10
+  dripDuration: 2.5
+  creepSpeed: 0.03
+  maxLength: 1.2
+  growthCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 2
+      outSlope: 2
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  fadeStart: 15
   fadeEnd: 30
-  gravity: 10
