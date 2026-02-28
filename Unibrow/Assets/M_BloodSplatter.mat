@@ -43,7 +43,7 @@ Material:
     m_Floats:
     - _Alpha: 1
     - _EnableExternalAlpha: 0
-    - _TopBand: 0.06
+    - _TopBand: 0.2
     - _ZWrite: 0
     m_Colors:
     - _Color: {r: 1, g: 1, b: 1, a: 1}
