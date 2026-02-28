@@ -217,11 +217,26 @@ public class SpiderPatrolSquish : MonoBehaviour
     IEnumerator SquishAndDie()
     {
         squished = true;
+
+        // squish
         rb.linearVelocity = Vector2.zero;
         rb.simulated = false;
         transform.localScale = new Vector3(baseScale.x * 0.9f, baseScale.y * 1.2f, baseScale.z);
         transform.localScale = new Vector3(baseScale.x * squishX, baseScale.y * squishY, baseScale.z);
         transform.localPosition += new Vector3(0f, squishDig, 0f);
+
+        // blood spray!!!
+        var col2d = GetComponent<Collider2D>();
+        float halfWidth = col2d ? col2d.bounds.extents.x : 0.2f; // fallback width
+
+        if (BloodFx.Instance != null)
+        {
+            BloodFx.Instance.SprayBothSides(transform.position, halfWidth, CgaPalette.Pair.LightRed_Red);
+        }
+        else
+        {
+            Debug.LogWarning("BloodFx.Instance is null (no BloodFx in scene).");
+        }       
 
         yield return new WaitForSeconds(squishTime);
         Destroy(gameObject);
