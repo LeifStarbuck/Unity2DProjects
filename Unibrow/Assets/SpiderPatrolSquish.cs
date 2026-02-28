@@ -18,6 +18,7 @@ public class SpiderPatrolSquish : MonoBehaviour
     [SerializeField] private float squishX = 1.4f;
     [SerializeField] private float squishY = 0.3f;
     [SerializeField] private float squishTime = 0.15f;
+    [SerializeField] private float squishDig = -.4f;
 
     [Header("Pause And Reflect")]
     [SerializeField] private float turnPause = 1f;
@@ -218,8 +219,9 @@ public class SpiderPatrolSquish : MonoBehaviour
         squished = true;
         rb.linearVelocity = Vector2.zero;
         rb.simulated = false;
-
+        transform.localScale = new Vector3(baseScale.x * 0.9f, baseScale.y * 1.2f, baseScale.z);
         transform.localScale = new Vector3(baseScale.x * squishX, baseScale.y * squishY, baseScale.z);
+        transform.localPosition += new Vector3(0f, squishDig, 0f);
 
         yield return new WaitForSeconds(squishTime);
         Destroy(gameObject);
