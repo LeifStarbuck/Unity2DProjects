@@ -126,9 +126,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 96df220078a0e48d38438cfb5bee6b53, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SplatterDecal
-  dripDuration: 2.5
-  creepSpeed: 0.1
-  maxLength: 1.2
+  dripDuration: 1
+  creepSpeed: 0.05
+  maxLength: 2
   growthCurve:
     serializedVersion: 2
     m_Curve:
