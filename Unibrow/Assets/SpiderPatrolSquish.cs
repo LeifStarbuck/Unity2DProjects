@@ -279,8 +279,8 @@ void OnCollisionEnter2D(Collision2D collision)
 
     if (BloodFx.Instance != null)
     {
-        BloodFx.Instance.SprayDirectional(transform.position, halfWidth, incomingDir, CgaPalette.Pair.LightGreen_Green);
-    
+        BloodFx.Instance.SprayDirectional(transform.position, halfWidth, incomingDir, CgaPalette.Pair.LightRed_Red);
+
         BloodFx.Instance.SprayBothSides(transform.position, halfWidth, CgaPalette.Pair.LightRed_Red);
     }
 

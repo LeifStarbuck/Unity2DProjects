@@ -70,48 +70,102 @@ public class BloodFx : MonoBehaviour
         Spray(center + new Vector3(+halfWidthWorld, 0f, 0f), Vector2.right, light, dark);
     }
 
-    public void SprayDirectional(Vector3 center, float halfWidthWorld, Vector2 dir, CgaPalette.Pair palette)
+    public void SprayDirectional(Vector3 center, float halfWidthWorld, Vector2 impactDir, CgaPalette.Pair palette)
     {
         var (light, dark) = CgaPalette.GetPair(palette);
 
-        Vector2 d = dir.sqrMagnitude > 0.0001f ? dir.normalized : Vector2.right;
+        Vector2 d = impactDir.sqrMagnitude > 0.0001f ? impactDir.normalized : Vector2.right;
 
-        // Spawn both sides but bias velocities along d
-        Spray(center + new Vector3(-halfWidthWorld, 0f, 0f), -d, light, dark);
-        Spray(center + new Vector3(+halfWidthWorld, 0f, 0f),  d, light, dark);
-    }
-
-    public void Spray(Vector3 pos, Vector2 outwardDir, Color32 light, Color32 dark)
-    {
-        sprayInstance.transform.position = new Vector3(pos.x, pos.y, zDepth);
+        // Start the system once
+        sprayInstance.transform.position = new Vector3(center.x, center.y, zDepth);
         sprayInstance.gameObject.SetActive(true);
+        sprayInstance.Clear(true);
+        sprayInstance.Simulate(0f, true, true);
+        sprayInstance.Play(true);
 
-        // Set circle material colors (procedural concentric circles)
+        // Set colors once
         var r = sprayInstance.GetComponent<ParticleSystemRenderer>();
         r.GetPropertyBlock(mpb);
         mpb.SetColor(LightColorId, light);
         mpb.SetColor(DarkColorId, dark);
         r.SetPropertyBlock(mpb);
 
-        // Emit with directional bias (so you can do left/right “from sides”)
-        var emitParams = new ParticleSystem.EmitParams();
-        for (int i = 0; i < particlesPerSide; i++)
-        {
-            Vector2 rand = Random.insideUnitCircle * spraySpread;
-            Vector2 dir = (outwardDir + rand).normalized;
+        // Emit from BOTH side positions but with the SAME forward direction d
+        EmitBurstFrom(center + new Vector3(-halfWidthWorld, 0f, 0f), d);
+        EmitBurstFrom(center + new Vector3(+halfWidthWorld, 0f, 0f), d);
 
-            Vector3 vel = new Vector3(dir.x, dir.y + sprayUpward, 0f) * spraySpeed;
-            emitParams.velocity = vel;
+        // Optional: stop emitting (not strictly needed if Looping is off)
+        sprayInstance.Stop(true, ParticleSystemStopBehavior.StopEmitting);
+    
+}
 
-            // Experimental
-            emitParams.velocity = new Vector3(dir.x, dir.y + sprayUpward, 0f) * Random.Range(2.5f, 4.5f);
+private void EmitBurstFrom(Vector3 pos, Vector2 dir)
+{
+    float coneHalfAngle = 18f;
+    var emitParams = new ParticleSystem.EmitParams();
 
-            sprayInstance.Emit(emitParams, 1);
-        }
+    for (int i = 0; i < particlesPerSide; i++)
+    {
+        float angle = Random.Range(-coneHalfAngle, coneHalfAngle);
+        Vector2 d = Rotate(dir, angle);
 
-        // stop soon; particles themselves have lifetime
-        sprayInstance.Stop(withChildren: true, stopBehavior: ParticleSystemStopBehavior.StopEmitting);
+        Vector2 lift = new Vector2(0f, sprayUpward);
+        float spd = Random.Range(2.5f, 4.5f) * spraySpeed;
+
+        Vector2 v2 = (d + lift).normalized * spd;
+
+        emitParams.position = pos; // IMPORTANT: per-particle spawn position
+        emitParams.velocity = new Vector3(v2.x, v2.y, 0f);
+        emitParams.startSize = Random.Range(0.18f, 0.28f);
+
+        sprayInstance.Emit(emitParams, 1);
     }
+}
+
+private static Vector2 Rotate(Vector2 v, float degrees)
+{
+    float rad = degrees * Mathf.Deg2Rad;
+    float s = Mathf.Sin(rad);
+    float c = Mathf.Cos(rad);
+    return new Vector2(c * v.x - s * v.y, s * v.x + c * v.y);
+}
+
+public void Spray(Vector3 pos, Vector2 outwardDir, Color32 light, Color32 dark)
+{
+    // Ensure a fresh burst every call
+    sprayInstance.transform.position = new Vector3(pos.x, pos.y, zDepth);
+    sprayInstance.gameObject.SetActive(true);
+    sprayInstance.Clear(true);
+    sprayInstance.Simulate(0f, true, true);
+    sprayInstance.Play(true);
+
+    // Material colors
+    var r = sprayInstance.GetComponent<ParticleSystemRenderer>();
+    r.GetPropertyBlock(mpb);
+    mpb.SetColor(LightColorId, light);
+    mpb.SetColor(DarkColorId, dark);
+    r.SetPropertyBlock(mpb);
+
+    Vector2 baseDir = outwardDir.sqrMagnitude > 0.0001f ? outwardDir.normalized : Vector2.right;
+
+    var emitParams = new ParticleSystem.EmitParams();
+
+    float coneHalfAngle = 18f; // tune
+    for (int i = 0; i < particlesPerSide; i++)
+    {
+        float angle = Random.Range(-coneHalfAngle, coneHalfAngle);
+        Vector2 dir = Rotate(baseDir, angle);
+
+        Vector2 lift = new Vector2(0f, sprayUpward);
+        float spd = Random.Range(2.5f, 4.5f) * spraySpeed;
+
+        Vector2 v2 = (dir + lift).normalized * spd;
+
+        emitParams.velocity = new Vector3(v2.x, v2.y, 0f);
+        emitParams.startSize = Random.Range(0.18f, 0.28f);
+        sprayInstance.Emit(emitParams, 1);
+    }
+}
 
     private void OnParticleCollision(GameObject other)
     {

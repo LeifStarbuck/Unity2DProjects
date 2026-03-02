@@ -444,7 +444,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 768
   allowPlayerStomp: 1
-  debug: 1
+  debug: 0
   spiderCollider: {fileID: 6261299098895648373}
 --- !u!1 &6569776980668657023
 GameObject:
