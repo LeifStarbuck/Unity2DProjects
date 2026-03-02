@@ -70,6 +70,17 @@ public class BloodFx : MonoBehaviour
         Spray(center + new Vector3(+halfWidthWorld, 0f, 0f), Vector2.right, light, dark);
     }
 
+    public void SprayDirectional(Vector3 center, float halfWidthWorld, Vector2 dir, CgaPalette.Pair palette)
+    {
+        var (light, dark) = CgaPalette.GetPair(palette);
+
+        Vector2 d = dir.sqrMagnitude > 0.0001f ? dir.normalized : Vector2.right;
+
+        // Spawn both sides but bias velocities along d
+        Spray(center + new Vector3(-halfWidthWorld, 0f, 0f), -d, light, dark);
+        Spray(center + new Vector3(+halfWidthWorld, 0f, 0f),  d, light, dark);
+    }
+
     public void Spray(Vector3 pos, Vector2 outwardDir, Color32 light, Color32 dark)
     {
         sprayInstance.transform.position = new Vector3(pos.x, pos.y, zDepth);

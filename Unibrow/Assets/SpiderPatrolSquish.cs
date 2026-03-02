@@ -33,6 +33,12 @@ public class SpiderPatrolSquish : MonoBehaviour
     [SerializeField] private float blinkMaxInterval = 3.5f;
     [SerializeField] private float blinkDuration = 0.08f;
 
+    [Header("Squish By Physics Hits")]
+    [SerializeField] private float minKillSpeed = 15f;          // tune
+    [SerializeField] private float minKillSpeedDown = 4f;      // easier to kill from above (crates)
+    [SerializeField] private LayerMask squishersLayerMask;     // optional: set to "Projectiles/Props"
+    [SerializeField] private bool allowPlayerStomp = true;     // keep your old behavior
+
     [Header("Debug")]
     [SerializeField] private bool debug = true;
 
@@ -193,54 +199,94 @@ public class SpiderPatrolSquish : MonoBehaviour
             }
         }
     }
+void OnCollisionEnter2D(Collision2D collision)
+{
+    if (squished) return;
 
-    void OnCollisionEnter2D(Collision2D collision)
+    // --- 1) Optional: keep the classic player stomp ---
+    if (allowPlayerStomp && collision.collider.CompareTag("Player"))
     {
-        if (squished) return;
-        if (!collision.collider.CompareTag("Player")) return;
-
         for (int i = 0; i < collision.contactCount; i++)
         {
             var c = collision.GetContact(i);
-            if (c.normal.y < -0.5f)
+            if (c.normal.y < -0.5f) // player contacting from above
             {
                 var playerRb = collision.collider.GetComponent<Rigidbody2D>();
                 if (playerRb != null)
                     playerRb.linearVelocity = new Vector2(playerRb.linearVelocity.x, 10f);
 
-                StartCoroutine(SquishAndDie());
-                break;
+                // Stomp has no "incoming object direction" - just use forward dir
+                Vector2 stompDir = new Vector2(dir, 0f);
+                StartCoroutine(SquishAndDie(stompDir));
+                return;
             }
         }
     }
 
-    IEnumerator SquishAndDie()
+    // --- 2) Physics object squish (basketball / crate / box etc.) ---
+    // Must have a Rigidbody2D on the other collider
+    var otherRb = collision.rigidbody; // rigidbody attached to the collider you hit
+    if (otherRb == null) return;
+
+    // Optional: restrict by layer mask (recommended)
+    if (squishersLayerMask.value != 0)
     {
-        squished = true;
-
-        // squish
-        rb.linearVelocity = Vector2.zero;
-        rb.simulated = false;
-        transform.localScale = new Vector3(baseScale.x * 0.9f, baseScale.y * 1.2f, baseScale.z);
-        transform.localScale = new Vector3(baseScale.x * squishX, baseScale.y * squishY, baseScale.z);
-        transform.localPosition += new Vector3(0f, squishDig, 0f);
-
-        // blood spray!!!
-        var col2d = GetComponent<Collider2D>();
-        float halfWidth = col2d ? col2d.bounds.extents.x : 0.2f; // fallback width
-
-        if (BloodFx.Instance != null)
-        {
-            BloodFx.Instance.SprayBothSides(transform.position, halfWidth, CgaPalette.Pair.LightRed_Red);
-        }
-        else
-        {
-            Debug.LogWarning("BloodFx.Instance is null (no BloodFx in scene).");
-        }       
-
-        yield return new WaitForSeconds(squishTime);
-        Destroy(gameObject);
+        int otherLayerBit = 1 << collision.collider.gameObject.layer;
+        if ((squishersLayerMask.value & otherLayerBit) == 0)
+            return;
     }
+
+    // Use relative velocity at collision moment (best signal for "impact force")
+    Vector2 relVel = collision.relativeVelocity;
+
+    // Decide if this hit is lethal
+    float speed = relVel.magnitude;
+
+    // If object is coming mostly from above, use lower threshold (crates)
+    bool mostlyDown = relVel.y < -Mathf.Abs(relVel.x);
+
+    float threshold = mostlyDown ? minKillSpeedDown : minKillSpeed;
+
+    if (speed >= threshold)
+    {
+        // Spray should go "with" the incoming object movement:
+        // relVel points from other->this in Unity's convention? In practice,
+        // using otherRb.velocity is more intuitive for direction.
+        Vector2 sprayDir = otherRb.linearVelocity;
+        if (sprayDir.sqrMagnitude < 0.01f)
+            sprayDir = -relVel; // fallback
+
+        StartCoroutine(SquishAndDie(sprayDir));
+    }
+}
+
+
+    IEnumerator SquishAndDie(Vector2 incomingDir)
+{
+    squished = true;
+
+    rb.linearVelocity = Vector2.zero;
+    rb.simulated = false;
+
+    // pre-squash then squash
+    transform.localScale = new Vector3(baseScale.x * 0.9f, baseScale.y * 1.2f, baseScale.z);
+    transform.localScale = new Vector3(baseScale.x * squishX, baseScale.y * squishY, baseScale.z);
+    transform.localPosition += new Vector3(0f, squishDig, 0f);
+
+    // blood spray aimed along incoming object direction
+    var col2d = GetComponent<Collider2D>();
+    float halfWidth = col2d ? col2d.bounds.extents.x : 0.2f;
+
+    if (BloodFx.Instance != null)
+    {
+        BloodFx.Instance.SprayDirectional(transform.position, halfWidth, incomingDir, CgaPalette.Pair.LightGreen_Green);
+    
+        BloodFx.Instance.SprayBothSides(transform.position, halfWidth, CgaPalette.Pair.LightRed_Red);
+    }
+
+    yield return new WaitForSeconds(squishTime);
+    Destroy(gameObject);
+}
 
     void OnDrawGizmosSelected()
     {

@@ -438,6 +438,12 @@ MonoBehaviour:
   blinkMinInterval: 1.2
   blinkMaxInterval: 3.5
   blinkDuration: 0.08
+  minKillSpeed: 6
+  minKillSpeedDown: 4
+  squishersLayerMask:
+    serializedVersion: 2
+    m_Bits: 768
+  allowPlayerStomp: 1
   debug: 1
   spiderCollider: {fileID: 6261299098895648373}
 --- !u!1 &6569776980668657023
