@@ -11,6 +11,10 @@ public class PlayerMove : MonoBehaviour
 
     [SerializeField] private Vector2 dustOffset = new Vector2(0f, -0.5f);
 
+    [Header("Player Sprite")]
+    [SerializeField] private SpriteRenderer sr;
+
+
     [Header("Jump Tuning")]
     [SerializeField] private float jumpImpulse = 10f;      // initial kick
     [SerializeField] private float jumpCutMultiplier = 0.5f; // how much to reduce upward speed on early release (0.3–0.7)
@@ -38,7 +42,6 @@ private float fireCooldownLeft = 0f;
     private int facing = 1;
 
     private Rigidbody2D rb;
-    private SpriteRenderer sr;
 
     private float holdTimer = 0f;
     private bool isJumping = false;
@@ -57,7 +60,7 @@ private float fireCooldownLeft = 0f;
     void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
-        sr = GetComponent<SpriteRenderer>();
+        //sr = GetComponent<SpriteRenderer>();
     }
 
     void Update()
