@@ -50,6 +50,9 @@ public class SpiderPatrolSquish : MonoBehaviour
 
     private Rigidbody2D rb;
     private int dir = 1;
+
+    public int Direction => dir;
+
     private bool squished = false;
     private Vector3 baseScale;
 
