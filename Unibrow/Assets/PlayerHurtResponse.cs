@@ -10,6 +10,8 @@ public class PlayerHurtResponse : MonoBehaviour
     private bool invulnerable;
     private Color baseColor;
 
+    public bool LockHorizontal { get; private set; }
+
     void Awake()
     {
         if (!rb) rb = GetComponent<Rigidbody2D>();
@@ -17,18 +19,36 @@ public class PlayerHurtResponse : MonoBehaviour
         if (sprite) baseColor = sprite.color;
     }
 
-    public void TryHurt(Vector2 knockbackImpulse, float invulnTime)
+public void TryHurt(Vector2 knockbackVelocity, float invulnTime)
+{
+    if (invulnerable) return;
+
+    invulnerable = true;
+    LockHorizontal = true;
+
+    rb.linearVelocity = knockbackVelocity;
+
+    StopAllCoroutines();
+    StartCoroutine(EndHurt(invulnTime));
+    StartCoroutine(FlashRoutine());
+}
+
+private IEnumerator EndHurt(float t)
+{
+    yield return new WaitForSeconds(t);
+    LockHorizontal = false;
+    invulnerable = false;
+}
+    private IEnumerator HurtRoutine(float t)
     {
-        if (invulnerable) return;
+        invulnerable = true;
+        LockHorizontal = true;
 
-        // Knockback: reset current velocity then apply impulse
-        rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
-        rb.AddForce(knockbackImpulse, ForceMode2D.Impulse);
+        yield return new WaitForSeconds(t);
 
-        StartCoroutine(InvulnRoutine(invulnTime));
-        StartCoroutine(FlashRoutine());
+        LockHorizontal = false;
+        invulnerable = false;
     }
-
     private IEnumerator InvulnRoutine(float t)
     {
         invulnerable = true;

@@ -211,15 +211,12 @@ public class SpiderPatrolSquish : MonoBehaviour
         // Require downward movement so side/brushing doesn't stomp.
         if (playerRb.linearVelocity.y > -stompMinDownSpeed) return;
 
-        // Bounce player up a bit
-        playerRb.linearVelocity = new Vector2(playerRb.linearVelocity.x, playerBounceY);
-
-        // Spray direction: along player's movement if meaningful, else spider forward
-        Vector2 incomingDir = playerRb.linearVelocity;
-        if (incomingDir.sqrMagnitude < 0.01f)
-            incomingDir = new Vector2(dir, 0f);
-
+        Vector2 incomingDir = playerRb.linearVelocity; // capture first
+        playerRb.linearVelocity = new Vector2(playerRb.linearVelocity.x, playerBounceY); // then bounce
+        
+        if (incomingDir.sqrMagnitude < 0.01f) incomingDir = new Vector2(dir, 0f);
         StartCoroutine(SquishAndDie(incomingDir));
+
     }
 
     // Keep collision-based squish for physics objects (crate/ball/etc.)

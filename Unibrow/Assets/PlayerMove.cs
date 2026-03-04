@@ -98,8 +98,14 @@ private float fireCooldownLeft = 0f;
         if (kb.aKey.isPressed || kb.leftArrowKey.isPressed) x = -1f;
         if (kb.dKey.isPressed || kb.rightArrowKey.isPressed) x = 1f;
 
-        //Apply movement
-        rb.linearVelocity = new Vector2(x * moveSpeed, rb.linearVelocity.y);
+        // If player is currently being hurt, lock horizontal movement
+        var hurt = GetComponent<PlayerHurtResponse>();
+        bool lockX = (hurt != null && hurt.LockHorizontal);
+
+        if (!lockX)
+        {
+            rb.linearVelocity = new Vector2(x * moveSpeed, rb.linearVelocity.y);
+        }
 
         //Flip sprite
         if (x > 0)

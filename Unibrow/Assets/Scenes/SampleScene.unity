@@ -4616,10 +4616,10 @@ Camera:
   m_LensShift: {x: 0, y: 0}
   m_NormalizedViewPortRect:
     serializedVersion: 2
-    x: 0
+    x: 0.8960469
     y: 0
-    width: 1
-    height: 1
+    width: 0.4216691
+    height: 0.052083336
   near clip plane: 0.3
   far clip plane: 1000
   field of view: 34
@@ -4649,7 +4649,7 @@ Transform:
   m_GameObject: {fileID: 519420028}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 88.74677, y: 27.62, z: -5}
+  m_LocalPosition: {x: 79.89, y: 27.62, z: -5}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -9362,7 +9362,7 @@ Transform:
   m_GameObject: {fileID: 1294826378}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 88.74677, y: 27.62, z: -5}
+  m_LocalPosition: {x: 79.89, y: 27.62, z: -5}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -9413,6 +9413,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e882af63e523f4c0cb3fa00445ab2ebc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SpiderBodyTrigger
+  knockbackX: 8
+  knockbackY: 6
+  invulnTime: 0.35
+  spider: {fileID: 2853613779389884417}
 --- !u!58 &1305619794
 CircleCollider2D:
   m_ObjectHideFlags: 0
@@ -9823,6 +9827,7 @@ GameObject:
   - component: {fileID: 1337402227}
   - component: {fileID: 1337402228}
   - component: {fileID: 1337402229}
+  - component: {fileID: 1337402230}
   m_Layer: 10
   m_Name: Player
   m_TagString: Player
@@ -10086,6 +10091,21 @@ MonoBehaviour:
   lookAheadRampTime: 0.25
   _currentOffset: {x: 0, y: 0}
   _enabledTime: 0
+--- !u!114 &1337402230
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1337402221}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 024d432a1b6994fd5b6da50a60f0a004, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerHurtResponse
+  rb: {fileID: 1337402226}
+  sprite: {fileID: 1323186304}
+  flashDuration: 0.12
 --- !u!1 &1352700260
 GameObject:
   m_ObjectHideFlags: 0
@@ -16160,6 +16180,17 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 4202595061242870518, guid: ea88ec859105d48d89b66430dc654aa3, type: 3}
   m_PrefabInstance: {fileID: 8314795100369676548}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &2853613779389884417 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 8031203759508721366, guid: ea88ec859105d48d89b66430dc654aa3, type: 3}
+  m_PrefabInstance: {fileID: 8314795100369676548}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8340c62b6734743c7a898701d2babe78, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SpiderPatrolSquish
 --- !u!1001 &7387547615534097839
 PrefabInstance:
   m_ObjectHideFlags: 0
