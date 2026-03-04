@@ -1883,7 +1883,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 158716430}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: Firepoint
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2015,6 +2015,98 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 380d06ccfdc2f40f09b27186dd14dd28, type: 3}
+--- !u!1 &219328777
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 219328778}
+  - component: {fileID: 219328780}
+  - component: {fileID: 219328779}
+  m_Layer: 11
+  m_Name: HeadCollider
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &219328778
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 219328777}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 430693630}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &219328779
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 219328777}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 22230fe082aee40b7be3745807c9d801, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Head
+  spider: {fileID: 430693626}
+--- !u!61 &219328780
+BoxCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 219328777}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 1
+  m_UsedByEffector: 0
+  m_CompositeOperation: 0
+  m_CompositeOrder: 0
+  m_Offset: {x: -0.059383392, y: 0.21307087}
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0, y: 0}
+    oldSize: {x: 0, y: 0}
+    newSize: {x: 0, y: 0}
+    adaptiveTilingThreshold: 0
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  m_Size: {x: 0.8812332, y: 0.09881401}
+  m_EdgeRadius: 0
 --- !u!1 &224667128
 GameObject:
   m_ObjectHideFlags: 0
@@ -2024,7 +2116,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 224667129}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: CameraTarget
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3827,6 +3919,22 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
+--- !u!114 &430693626 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 2853613777772363596, guid: 380d06ccfdc2f40f09b27186dd14dd28, type: 3}
+  m_PrefabInstance: {fileID: 1626969933}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8340c62b6734743c7a898701d2babe78, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SpiderPatrolSquish
+--- !u!4 &430693630 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 1683649210942484126, guid: 380d06ccfdc2f40f09b27186dd14dd28, type: 3}
+  m_PrefabInstance: {fileID: 1626969933}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &433622052
 GameObject:
   m_ObjectHideFlags: 0
@@ -7732,7 +7840,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 998091430}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: Hands
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -9567,7 +9675,7 @@ GameObject:
   - component: {fileID: 1323186303}
   - component: {fileID: 1323186304}
   - component: {fileID: 1323186305}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: PlayerVisual
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -9685,7 +9793,7 @@ GameObject:
   - component: {fileID: 1337402227}
   - component: {fileID: 1337402228}
   - component: {fileID: 1337402229}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: Player
   m_TagString: Player
   m_Icon: {fileID: 0}
@@ -9704,7 +9812,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: df2a49c39bdfe4425b9c7ed204fdd7d3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerMove
-  moveSpeed: 5
+  moveSpeed: 7
   dustPrefab: {fileID: 6588518674708807525, guid: 5686d8767ccfe453783891d409cf6f88, type: 3}
   feet: {fileID: 1430743591}
   dustOffset: {x: 0, y: -0.3}
@@ -11091,7 +11199,7 @@ GameObject:
   - component: {fileID: 1430743593}
   - component: {fileID: 1430743592}
   - component: {fileID: 1430743591}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: Feet
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -12565,7 +12673,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: 1683649210942484126, guid: 380d06ccfdc2f40f09b27186dd14dd28, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 219328778}
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 380d06ccfdc2f40f09b27186dd14dd28, type: 3}
 --- !u!1 &1647906621
@@ -14543,7 +14654,7 @@ GameObject:
   - component: {fileID: 1895630526}
   - component: {fileID: 1895630527}
   - component: {fileID: 1895630528}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: CatchZone
   m_TagString: Untagged
   m_Icon: {fileID: 0}

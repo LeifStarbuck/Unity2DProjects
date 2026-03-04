@@ -18,8 +18,8 @@ TagManager:
   - ParticleGround
   - Projectile
   - Prop
-  - 
-  - 
+  - Player
+  - Enemy
   - 
   - 
   - 

@@ -18,15 +18,15 @@ public class SpiderPatrolSquish : MonoBehaviour
     [SerializeField] private float squishX = 1.4f;
     [SerializeField] private float squishY = 0.3f;
     [SerializeField] private float squishTime = 0.15f;
-    [SerializeField] private float squishDig = -.4f;
+    [SerializeField] private float squishDig = -0.4f;
 
     [Header("Pause And Reflect")]
     [SerializeField] private float turnPause = 1f;
 
     [Header("Look Over Edge")]
-    [SerializeField] private float lookLeanX = 0.08f;   // how far to lean forward during pause
-    [SerializeField] private float lookBobY = 0.04f;    // tiny bob
-    [SerializeField] private float lookSpeed = 10f;     // animation speed
+    [SerializeField] private float lookLeanX = 0.08f;
+    [SerializeField] private float lookBobY = 0.04f;
+    [SerializeField] private float lookSpeed = 10f;
 
     [Header("Blink")]
     [SerializeField] private float blinkMinInterval = 1.2f;
@@ -34,10 +34,14 @@ public class SpiderPatrolSquish : MonoBehaviour
     [SerializeField] private float blinkDuration = 0.08f;
 
     [Header("Squish By Physics Hits")]
-    [SerializeField] private float minKillSpeed = 15f;          // tune
-    [SerializeField] private float minKillSpeedDown = 4f;      // easier to kill from above (crates)
-    [SerializeField] private LayerMask squishersLayerMask;     // optional: set to "Projectiles/Props"
-    [SerializeField] private bool allowPlayerStomp = true;     // keep your old behavior
+    [SerializeField] private float minKillSpeed = 15f;
+    [SerializeField] private float minKillSpeedDown = 4f;
+    [SerializeField] private LayerMask squishersLayerMask;
+
+    [Header("Player Stomp (Trigger-based)")]
+    [SerializeField] private bool allowPlayerStomp = true;
+    [SerializeField] private float playerBounceY = 10f;     // how hard player pops up after stomp
+    [SerializeField] private float stompMinDownSpeed = 0.1f; // require player moving downward at least this much
 
     [Header("Debug")]
     [SerializeField] private bool debug = true;
@@ -72,7 +76,6 @@ public class SpiderPatrolSquish : MonoBehaviour
 
     void OnEnable()
     {
-        // Start blinking loop
         if (eyesRoot != null)
             StartCoroutine(BlinkLoop());
     }
@@ -83,28 +86,23 @@ public class SpiderPatrolSquish : MonoBehaviour
 
         bool isGrounded = spiderCollider != null && spiderCollider.IsTouchingLayers(groundLayer);
 
-        // PAUSE BLOCK (pause first, then flip once, then resume)
+        // PAUSE BLOCK
         if (pauseTimer > 0f)
         {
             pauseTimer -= Time.fixedDeltaTime;
-
-            // stop horizontal motion while pausing
             rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
-
-            // look animation while pausing
             DoLookAnimation();
 
             if (pauseTimer <= 0f && pendingFlip)
             {
                 pendingFlip = false;
-                Flip(); // Flip does NOT re-start pause
+                Flip();
                 ResetLook();
             }
 
             return;
         }
 
-        // Not paused: keep visuals normal
         ResetLook();
 
         if (!isGrounded) return;
@@ -115,7 +113,6 @@ public class SpiderPatrolSquish : MonoBehaviour
         bool groundAhead = Physics2D.Raycast(groundProbe.position, Vector2.down, 0.25f, groundLayer);
         bool wallAhead = Physics2D.Raycast(wallProbe.position, new Vector2(dir, 0f), 0.15f, groundLayer);
 
-        // Schedule pause-then-flip (only schedule once)
         if ((!groundAhead || wallAhead) && !pendingFlip)
         {
             pendingFlip = true;
@@ -141,7 +138,6 @@ public class SpiderPatrolSquish : MonoBehaviour
     {
         dir *= -1;
 
-        // Mirror probes to the new "front" side
         if (groundProbe != null)
         {
             Vector3 lp = groundProbe.localPosition;
@@ -154,14 +150,12 @@ public class SpiderPatrolSquish : MonoBehaviour
             wallProbe.localPosition = new Vector3(-lp.x, lp.y, lp.z);
         }
 
-        // Flip visuals so thorax leads
         if (visualRoot != null)
         {
             Vector3 s = visualRoot.localScale;
             visualRoot.localScale = new Vector3(Mathf.Abs(s.x) * dir, s.y, s.z);
         }
 
-        // Immediately push it in the new direction (no pause here)
         rb.linearVelocity = new Vector2(dir * speed, rb.linearVelocity.y);
     }
 
@@ -169,7 +163,6 @@ public class SpiderPatrolSquish : MonoBehaviour
     {
         if (visualRoot == null) return;
 
-        // Lean slightly forward in the current dir + bob a tiny bit
         float t = Time.time * lookSpeed;
         float lean = Mathf.Lerp(0f, lookLeanX, 0.5f + 0.5f * Mathf.Sin(t));
         float bob = lookBobY * Mathf.Sin(t * 0.8f);
@@ -185,7 +178,6 @@ public class SpiderPatrolSquish : MonoBehaviour
 
     private IEnumerator BlinkLoop()
     {
-        // Random blink forever while enabled
         while (true)
         {
             float wait = Random.Range(blinkMinInterval, blinkMaxInterval);
@@ -199,94 +191,89 @@ public class SpiderPatrolSquish : MonoBehaviour
             }
         }
     }
-void OnCollisionEnter2D(Collision2D collision)
-{
-    if (squished) return;
 
-    // --- 1) Optional: keep the classic player stomp ---
-    if (allowPlayerStomp && collision.collider.CompareTag("Player"))
+    /// <summary>
+    /// Call this from a HeadTrigger (IsTrigger collider) when the Player overlaps the spider head.
+    /// Works even when Player↔Enemy collisions are disabled in the Physics2D matrix.
+    /// </summary>
+    public void TryStompFromPlayer(Collider2D playerCol)
     {
-        for (int i = 0; i < collision.contactCount; i++)
-        {
-            var c = collision.GetContact(i);
-            if (c.normal.y < -0.5f) // player contacting from above
-            {
-                var playerRb = collision.collider.GetComponent<Rigidbody2D>();
-                if (playerRb != null)
-                    playerRb.linearVelocity = new Vector2(playerRb.linearVelocity.x, 10f);
+        if (squished) return;
+        if (!allowPlayerStomp) return;
+        if (!playerCol.CompareTag("Player")) return;
 
-                // Stomp has no "incoming object direction" - just use forward dir
-                Vector2 stompDir = new Vector2(dir, 0f);
-                StartCoroutine(SquishAndDie(stompDir));
+        var playerRb = playerCol.attachedRigidbody;
+        if (playerRb == null) return;
+
+        // Require downward movement so side/brushing doesn't stomp.
+        if (playerRb.linearVelocity.y > -stompMinDownSpeed) return;
+
+        // Bounce player up a bit
+        playerRb.linearVelocity = new Vector2(playerRb.linearVelocity.x, playerBounceY);
+
+        // Spray direction: along player's movement if meaningful, else spider forward
+        Vector2 incomingDir = playerRb.linearVelocity;
+        if (incomingDir.sqrMagnitude < 0.01f)
+            incomingDir = new Vector2(dir, 0f);
+
+        StartCoroutine(SquishAndDie(incomingDir));
+    }
+
+    // Keep collision-based squish for physics objects (crate/ball/etc.)
+    void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (squished) return;
+
+        // If you disabled Player↔Enemy collisions, this won't run for player anymore (which is what we want).
+        var otherRb = collision.rigidbody;
+        if (otherRb == null) return;
+
+        if (squishersLayerMask.value != 0)
+        {
+            int otherLayerBit = 1 << collision.collider.gameObject.layer;
+            if ((squishersLayerMask.value & otherLayerBit) == 0)
                 return;
-            }
+        }
+
+        Vector2 relVel = collision.relativeVelocity;
+        float speed = relVel.magnitude;
+
+        bool mostlyDown = relVel.y < -Mathf.Abs(relVel.x);
+        float threshold = mostlyDown ? minKillSpeedDown : minKillSpeed;
+
+        if (speed >= threshold)
+        {
+            Vector2 sprayDir = otherRb.linearVelocity;
+            if (sprayDir.sqrMagnitude < 0.01f)
+                sprayDir = -relVel;
+
+            StartCoroutine(SquishAndDie(sprayDir));
         }
     }
 
-    // --- 2) Physics object squish (basketball / crate / box etc.) ---
-    // Must have a Rigidbody2D on the other collider
-    var otherRb = collision.rigidbody; // rigidbody attached to the collider you hit
-    if (otherRb == null) return;
-
-    // Optional: restrict by layer mask (recommended)
-    if (squishersLayerMask.value != 0)
-    {
-        int otherLayerBit = 1 << collision.collider.gameObject.layer;
-        if ((squishersLayerMask.value & otherLayerBit) == 0)
-            return;
-    }
-
-    // Use relative velocity at collision moment (best signal for "impact force")
-    Vector2 relVel = collision.relativeVelocity;
-
-    // Decide if this hit is lethal
-    float speed = relVel.magnitude;
-
-    // If object is coming mostly from above, use lower threshold (crates)
-    bool mostlyDown = relVel.y < -Mathf.Abs(relVel.x);
-
-    float threshold = mostlyDown ? minKillSpeedDown : minKillSpeed;
-
-    if (speed >= threshold)
-    {
-        // Spray should go "with" the incoming object movement:
-        // relVel points from other->this in Unity's convention? In practice,
-        // using otherRb.velocity is more intuitive for direction.
-        Vector2 sprayDir = otherRb.linearVelocity;
-        if (sprayDir.sqrMagnitude < 0.01f)
-            sprayDir = -relVel; // fallback
-
-        StartCoroutine(SquishAndDie(sprayDir));
-    }
-}
-
-
     IEnumerator SquishAndDie(Vector2 incomingDir)
-{
-    squished = true;
-
-    rb.linearVelocity = Vector2.zero;
-    rb.simulated = false;
-
-    // pre-squash then squash
-    transform.localScale = new Vector3(baseScale.x * 0.9f, baseScale.y * 1.2f, baseScale.z);
-    transform.localScale = new Vector3(baseScale.x * squishX, baseScale.y * squishY, baseScale.z);
-    transform.localPosition += new Vector3(0f, squishDig, 0f);
-
-    // blood spray aimed along incoming object direction
-    var col2d = GetComponent<Collider2D>();
-    float halfWidth = col2d ? col2d.bounds.extents.x : 0.2f;
-
-    if (BloodFx.Instance != null)
     {
-        BloodFx.Instance.SprayDirectional(transform.position, halfWidth, incomingDir, CgaPalette.Pair.LightRed_Red);
+        squished = true;
 
-        BloodFx.Instance.SprayBothSides(transform.position, halfWidth, CgaPalette.Pair.LightRed_Red);
+        rb.linearVelocity = Vector2.zero;
+        rb.simulated = false;
+
+        transform.localScale = new Vector3(baseScale.x * 0.9f, baseScale.y * 1.2f, baseScale.z);
+        transform.localScale = new Vector3(baseScale.x * squishX, baseScale.y * squishY, baseScale.z);
+        transform.localPosition += new Vector3(0f, squishDig, 0f);
+
+        var col2d = GetComponent<Collider2D>();
+        float halfWidth = col2d ? col2d.bounds.extents.x : 0.2f;
+
+        if (BloodFx.Instance != null)
+        {
+            BloodFx.Instance.SprayDirectional(transform.position, halfWidth, incomingDir, CgaPalette.Pair.LightRed_Red);
+            BloodFx.Instance.SprayBothSides(transform.position, halfWidth, CgaPalette.Pair.LightRed_Red);
+        }
+
+        yield return new WaitForSeconds(squishTime);
+        Destroy(gameObject);
     }
-
-    yield return new WaitForSeconds(squishTime);
-    Destroy(gameObject);
-}
 
     void OnDrawGizmosSelected()
     {
