@@ -70,11 +70,13 @@ public class BloodFx : MonoBehaviour
         Spray(center + new Vector3(+halfWidthWorld, 0f, 0f), Vector2.right, light, dark);
     }
 
-    public void SprayDirectional(Vector3 center, float halfWidthWorld, Vector2 impactDir, CgaPalette.Pair palette)
+    public void SprayDirectional(Vector3 center, float halfWidthWorld, Vector2 impactVel, CgaPalette.Pair palette)
     {
         var (light, dark) = CgaPalette.GetPair(palette);
 
-        Vector2 d = impactDir.sqrMagnitude > 0.0001f ? impactDir.normalized : Vector2.right;
+        // Keep magnitude (speed) and direction
+        float impactSpeed = impactVel.magnitude;
+        Vector2 dir = impactSpeed > 0.001f ? (impactVel / impactSpeed) : Vector2.right;
 
         // Start the system once
         sprayInstance.transform.position = new Vector3(center.x, center.y, zDepth);
@@ -90,19 +92,23 @@ public class BloodFx : MonoBehaviour
         mpb.SetColor(DarkColorId, dark);
         r.SetPropertyBlock(mpb);
 
-        // Emit from BOTH side positions but with the SAME forward direction d
-        EmitBurstFrom(center + new Vector3(-halfWidthWorld, 0f, 0f), d);
-        EmitBurstFrom(center + new Vector3(+halfWidthWorld, 0f, 0f), d);
+        // Emit from both side positions but with the same impact direction and speed scaling
+        EmitBurstFrom(center + new Vector3(-halfWidthWorld, 0f, 0f), dir, impactSpeed);
+        EmitBurstFrom(center + new Vector3(+halfWidthWorld, 0f, 0f), dir, impactSpeed);
 
-        // Optional: stop emitting (not strictly needed if Looping is off)
         sprayInstance.Stop(true, ParticleSystemStopBehavior.StopEmitting);
     
+        Debug.Log($"impactVel={impactVel} speed={impactVel.magnitude}");
 }
 
-private void EmitBurstFrom(Vector3 pos, Vector2 dir)
+private void EmitBurstFrom(Vector3 pos, Vector2 dir, float impactSpeed)
 {
     float coneHalfAngle = 18f;
     var emitParams = new ParticleSystem.EmitParams();
+
+    // Map impact speed to a multiplier (tune these numbers)
+    // Example: slow projectile ~3 -> ~1x, fast projectile ~20 -> ~2.5x
+    float speedMul = Mathf.Lerp(1f, 2.5f, Mathf.InverseLerp(3f, 20f, impactSpeed));
 
     for (int i = 0; i < particlesPerSide; i++)
     {
@@ -110,17 +116,18 @@ private void EmitBurstFrom(Vector3 pos, Vector2 dir)
         Vector2 d = Rotate(dir, angle);
 
         Vector2 lift = new Vector2(0f, sprayUpward);
-        float spd = Random.Range(2.5f, 4.5f) * spraySpeed;
+        float spd = Random.Range(2.5f, 4.5f) * spraySpeed * speedMul;
 
         Vector2 v2 = (d + lift).normalized * spd;
 
-        emitParams.position = pos; // IMPORTANT: per-particle spawn position
+        emitParams.position = pos;
         emitParams.velocity = new Vector3(v2.x, v2.y, 0f);
         emitParams.startSize = Random.Range(0.18f, 0.28f);
 
         sprayInstance.Emit(emitParams, 1);
     }
 }
+
 
 private static Vector2 Rotate(Vector2 v, float degrees)
 {

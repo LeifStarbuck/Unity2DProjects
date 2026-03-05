@@ -213,7 +213,7 @@ public class SpiderPatrolSquish : MonoBehaviour
 
         Vector2 incomingDir = playerRb.linearVelocity; // capture first
         playerRb.linearVelocity = new Vector2(playerRb.linearVelocity.x, playerBounceY); // then bounce
-        
+
         if (incomingDir.sqrMagnitude < 0.01f) incomingDir = new Vector2(dir, 0f);
         StartCoroutine(SquishAndDie(incomingDir));
 
@@ -268,7 +268,10 @@ public class SpiderPatrolSquish : MonoBehaviour
         if (BloodFx.Instance != null)
         {
             BloodFx.Instance.SprayDirectional(transform.position, halfWidth, incomingDir, CgaPalette.Pair.LightRed_Red);
-            BloodFx.Instance.SprayBothSides(transform.position, halfWidth, CgaPalette.Pair.LightRed_Red);
+
+            //broken
+            //BloodFx.Instance.SprayBothSides(transform.position, halfWidth, CgaPalette.Pair.LightRed_Red);
+
         }
 
         yield return new WaitForSeconds(squishTime);
