@@ -14,7 +14,6 @@ public class BloodFx : MonoBehaviour
     [SerializeField] private int particlesPerSide = 4;
     [SerializeField] private float spraySpeed = 4.0f;
     [SerializeField] private float sprayUpward = 0.6f;       // arc
-    [SerializeField] private float spraySpread = 0.35f;      // random angle spread
     [SerializeField] private float zDepth = 0f;              // set if you need sorting
 
     [Header("Splatter")]
