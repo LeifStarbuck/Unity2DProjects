@@ -23,12 +23,11 @@ public class SpiderPatrolSquish : MonoBehaviour
     [Header("Pause And Reflect")]
     [SerializeField] private float turnPause = 1f;
 
-    [Header("Look Over Edge")]
-    [SerializeField] private float lookLeanX = 0.08f;
-    [SerializeField] private float lookBobY = 0.04f;
-    [SerializeField] private float lookSpeed = 10f;
+    [Header("Walk Bob")]
+    [SerializeField] private float walkBobY = 0.04f;
+    [SerializeField] private float walkBobSpeed = 10f;
 
-    [Header("Blink")]
+    [Header("Blink (only while paused)")]
     [SerializeField] private float blinkMinInterval = 1.2f;
     [SerializeField] private float blinkMaxInterval = 3.5f;
     [SerializeField] private float blinkDuration = 0.08f;
@@ -40,17 +39,20 @@ public class SpiderPatrolSquish : MonoBehaviour
 
     [Header("Player Stomp (Trigger-based)")]
     [SerializeField] private bool allowPlayerStomp = true;
-    [SerializeField] private float playerBounceY = 10f;     // how hard player pops up after stomp
-    [SerializeField] private float stompMinDownSpeed = 0.1f; // require player moving downward at least this much
+    [SerializeField] private float playerBounceY = 10f;
+    [SerializeField] private float stompMinDownSpeed = 0.1f;
+
+    [Header("Pause Lean")]
+    [SerializeField] private float pauseLeanX = 0.18f;
+    [SerializeField] private float pauseLeanSpeed = 6f;
 
     [Header("Debug")]
-    [SerializeField] private bool debug = true;
+    [SerializeField] private bool debug = false;
 
     [SerializeField] private Collider2D spiderCollider; // assign CircleCollider2D
 
     private Rigidbody2D rb;
     private int dir = 1;
-
     public int Direction => dir;
 
     private bool squished = false;
@@ -65,6 +67,9 @@ public class SpiderPatrolSquish : MonoBehaviour
 
     private Vector3 visualBaseLocalPos;
 
+    // Blink control (pause-only)
+    private Coroutine pauseBlinkCo;
+
     void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
@@ -77,10 +82,9 @@ public class SpiderPatrolSquish : MonoBehaviour
             visualBaseLocalPos = visualRoot.localPosition;
     }
 
-    void OnEnable()
+    void OnDisable()
     {
-        if (eyesRoot != null)
-            StartCoroutine(BlinkLoop());
+        StopPauseBlink();
     }
 
     void FixedUpdate()
@@ -89,29 +93,42 @@ public class SpiderPatrolSquish : MonoBehaviour
 
         bool isGrounded = spiderCollider != null && spiderCollider.IsTouchingLayers(groundLayer);
 
-        // PAUSE BLOCK
-        if (pauseTimer > 0f)
+        bool isPaused = pauseTimer > 0f;
+
+        // ---- PAUSE BLOCK ----
+        if (isPaused)
         {
             pauseTimer -= Time.fixedDeltaTime;
             rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
-            DoLookAnimation();
+
+            // no bob while paused
+            DoPauseLean();
+
+            // blink only while paused
+            EnsurePauseBlinkRunning(true);
 
             if (pauseTimer <= 0f && pendingFlip)
             {
                 pendingFlip = false;
                 Flip();
-                ResetLook();
             }
-
             return;
         }
 
-        ResetLook();
+        // not paused anymore
+        EnsurePauseBlinkRunning(false);
 
-        if (!isGrounded) return;
+        if (!isGrounded)
+        {
+            ResetVisual();
+            return;
+        }
 
-        // Move
+        // ---- MOVE ----
         rb.linearVelocity = new Vector2(dir * speed, rb.linearVelocity.y);
+
+        // bob only while walking (grounded + not paused + moving)
+        DoWalkBob();
 
         bool groundAhead = Physics2D.Raycast(groundProbe.position, Vector2.down, 0.25f, groundLayer);
         bool wallAhead = Physics2D.Raycast(wallProbe.position, new Vector2(dir, 0f), 0.15f, groundLayer);
@@ -136,7 +153,17 @@ public class SpiderPatrolSquish : MonoBehaviour
             prevWallAhead = wallAhead;
         }
     }
+private void DoPauseLean()
+{
+    if (visualRoot == null) return;
 
+    visualRoot.localPosition =
+        Vector3.Lerp(
+            visualRoot.localPosition,
+            visualBaseLocalPos + new Vector3(dir * pauseLeanX, 0f, 0f),
+            Time.deltaTime * pauseLeanSpeed
+        );
+}
     private void Flip()
     {
         dir *= -1;
@@ -162,29 +189,61 @@ public class SpiderPatrolSquish : MonoBehaviour
         rb.linearVelocity = new Vector2(dir * speed, rb.linearVelocity.y);
     }
 
-    private void DoLookAnimation()
+    // -------- Visuals --------
+
+    private void DoWalkBob()
     {
         if (visualRoot == null) return;
 
-        float t = Time.time * lookSpeed;
-        float lean = Mathf.Lerp(0f, lookLeanX, 0.5f + 0.5f * Mathf.Sin(t));
-        float bob = lookBobY * Mathf.Sin(t * 0.8f);
-
-        visualRoot.localPosition = visualBaseLocalPos + new Vector3(dir * lean, bob, 0f);
+        float t = Time.time * walkBobSpeed;
+        float bob = walkBobY * Mathf.Sin(t);
+        visualRoot.localPosition = visualBaseLocalPos + new Vector3(0f, bob, 0f);
     }
 
-    private void ResetLook()
+    private void ResetVisual()
     {
         if (visualRoot == null) return;
         visualRoot.localPosition = visualBaseLocalPos;
     }
 
-    private IEnumerator BlinkLoop()
+    // -------- Blink (pause-only) --------
+
+    private void EnsurePauseBlinkRunning(bool shouldRun)
     {
+        if (eyesRoot == null) return;
+
+        if (shouldRun)
+        {
+            if (pauseBlinkCo == null)
+                pauseBlinkCo = StartCoroutine(PauseBlinkLoop());
+        }
+        else
+        {
+            StopPauseBlink();
+        }
+    }
+
+    private void StopPauseBlink()
+    {
+        if (pauseBlinkCo != null)
+        {
+            StopCoroutine(pauseBlinkCo);
+            pauseBlinkCo = null;
+        }
+
+        if (eyesRoot != null)
+            eyesRoot.gameObject.SetActive(true);
+    }
+
+    private IEnumerator PauseBlinkLoop()
+    {
+        // Only runs while paused (we stop it when leaving pause).
         while (true)
         {
             float wait = Random.Range(blinkMinInterval, blinkMaxInterval);
             yield return new WaitForSeconds(wait);
+
+            if (pauseTimer <= 0f) yield break; // safety
 
             if (eyesRoot != null)
             {
@@ -208,23 +267,19 @@ public class SpiderPatrolSquish : MonoBehaviour
         var playerRb = playerCol.attachedRigidbody;
         if (playerRb == null) return;
 
-        // Require downward movement so side/brushing doesn't stomp.
         if (playerRb.linearVelocity.y > -stompMinDownSpeed) return;
 
-        Vector2 incomingDir = playerRb.linearVelocity; // capture first
-        playerRb.linearVelocity = new Vector2(playerRb.linearVelocity.x, playerBounceY); // then bounce
+        Vector2 incomingDir = playerRb.linearVelocity;
+        playerRb.linearVelocity = new Vector2(playerRb.linearVelocity.x, playerBounceY);
 
         if (incomingDir.sqrMagnitude < 0.01f) incomingDir = new Vector2(dir, 0f);
         StartCoroutine(SquishAndDie(incomingDir));
-
     }
 
-    // Keep collision-based squish for physics objects (crate/ball/etc.)
     void OnCollisionEnter2D(Collision2D collision)
     {
         if (squished) return;
 
-        // If you disabled Player↔Enemy collisions, this won't run for player anymore (which is what we want).
         var otherRb = collision.rigidbody;
         if (otherRb == null) return;
 
@@ -255,6 +310,8 @@ public class SpiderPatrolSquish : MonoBehaviour
     {
         squished = true;
 
+        StopPauseBlink(); // ensure eyes restore & coroutine stops
+
         rb.linearVelocity = Vector2.zero;
         rb.simulated = false;
 
@@ -268,10 +325,6 @@ public class SpiderPatrolSquish : MonoBehaviour
         if (BloodFx.Instance != null)
         {
             BloodFx.Instance.SprayDirectional(transform.position, halfWidth, incomingDir, CgaPalette.Pair.LightRed_Red);
-
-            //broken
-            //BloodFx.Instance.SprayBothSides(transform.position, halfWidth, CgaPalette.Pair.LightRed_Red);
-
         }
 
         yield return new WaitForSeconds(squishTime);
