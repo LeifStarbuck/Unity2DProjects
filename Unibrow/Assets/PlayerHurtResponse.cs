@@ -42,6 +42,9 @@ public class PlayerHurtResponse : MonoBehaviour
         // Health i-frames gate (if Health owns i-frames)
         if (!playerHealth.CanTakeDamage()) return;
 
+        // Camera shake
+        FindFirstObjectByType<CameraShake>()?.Shake(4f, 0.25f); 
+
         // Apply damage first (only once per valid hit)
         playerHealth.TakeDamage(1);
 
