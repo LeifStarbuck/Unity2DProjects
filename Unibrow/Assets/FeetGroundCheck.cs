@@ -4,24 +4,23 @@ public class FeetGroundCheck : MonoBehaviour
 {
     public bool IsGrounded { get; private set; }
 
+    [SerializeField] private LayerMask groundLayers;
+
     void OnTriggerEnter2D(Collider2D other)
     {
-        Debug.Log($"[Feet] ENTER: {other.name} layer={LayerMask.LayerToName(other.gameObject.layer)} isTrigger={other.isTrigger}");
-        if (other.gameObject.layer == LayerMask.NameToLayer("Ground"))
+        if ((groundLayers.value & (1 << other.gameObject.layer)) != 0)
             IsGrounded = true;
     }
 
     void OnTriggerStay2D(Collider2D other)
     {
-        // Helps if Enter is missed due to setup issues
-        if (other.gameObject.layer == LayerMask.NameToLayer("Ground"))
+        if ((groundLayers.value & (1 << other.gameObject.layer)) != 0)
             IsGrounded = true;
     }
 
     void OnTriggerExit2D(Collider2D other)
     {
-        Debug.Log($"[Feet] EXIT: {other.name} layer={LayerMask.LayerToName(other.gameObject.layer)}");
-        if (other.gameObject.layer == LayerMask.NameToLayer("Ground"))
+        if ((groundLayers.value & (1 << other.gameObject.layer)) != 0)
             IsGrounded = false;
     }
 }
