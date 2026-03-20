@@ -19,8 +19,9 @@ public class SpiderPatrolSquish : PatrolCritterBase
     [Header("Player Stomp (Trigger-based)")]
     [SerializeField] private bool allowPlayerStomp = true;
     [SerializeField] private float playerBounceY = 10f;
+    [SerializeField] private float playerBounceBoostY = 15f;
+    [SerializeField] private bool requireJumpHoldForBoost = true;
     [SerializeField] private float stompMinDownSpeed = 0.1f;
-
     private Vector3 baseScale;
 
     protected override void Awake()
@@ -41,7 +42,11 @@ public class SpiderPatrolSquish : PatrolCritterBase
         if (playerRb.linearVelocity.y > -stompMinDownSpeed) return;
 
         Vector2 incomingDir = playerRb.linearVelocity;
-        playerRb.linearVelocity = new Vector2(playerRb.linearVelocity.x, playerBounceY);
+
+        bool jumpHeld = Input.GetKey(KeyCode.Space);
+        float bounceY = (requireJumpHoldForBoost && jumpHeld) ? playerBounceBoostY : playerBounceY;
+
+        playerRb.linearVelocity = new Vector2(playerRb.linearVelocity.x, bounceY);
 
         if (incomingDir.sqrMagnitude < 0.01f)
             incomingDir = new Vector2(dir, 0f);

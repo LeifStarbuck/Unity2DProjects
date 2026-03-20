@@ -695,7 +695,9 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 768
   allowPlayerStomp: 1
-  playerBounceY: 15
+  playerBounceY: 7
+  playerBounceBoostY: 17
+  requireJumpHoldForBoost: 1
   stompMinDownSpeed: 0.1
 --- !u!1 &6495583171466932933
 GameObject:
