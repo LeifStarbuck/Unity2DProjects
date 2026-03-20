@@ -685,15 +685,16 @@ MonoBehaviour:
   debug: 0
   squishX: 1.4
   squishY: 0.5
-  squishTime: 10
   squishDig: -0.4
+  squishAnimTime: 0.15
+  corpseLifetime: 10
   minKillSpeed: 8
   minKillSpeedDown: 4
   squishersLayerMask:
     serializedVersion: 2
     m_Bits: 768
   allowPlayerStomp: 1
-  playerBounceY: 10
+  playerBounceY: 15
   stompMinDownSpeed: 0.1
 --- !u!1 &6495583171466932933
 GameObject:
