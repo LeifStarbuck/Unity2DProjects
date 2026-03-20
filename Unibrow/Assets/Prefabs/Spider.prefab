@@ -610,7 +610,7 @@ Rigidbody2D:
   m_ExcludeLayers:
     serializedVersion: 2
     m_Bits: 0
-  m_Interpolate: 0
+  m_Interpolate: 1
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 4
@@ -688,6 +688,7 @@ MonoBehaviour:
   squishDig: -0.4
   squishAnimTime: 0.15
   corpseLifetime: 10
+  squishBounceAmount: 0.08
   minKillSpeed: 8
   minKillSpeedDown: 4
   squishersLayerMask:

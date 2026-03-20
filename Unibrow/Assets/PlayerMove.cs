@@ -57,35 +57,68 @@ private float fireCooldownLeft = 0f;
 
 
 
-    void Awake()
+private float moveX;
+private PlayerHurtResponse hurt;
+private BallCatcher catcher;
+
+void Awake()
+{
+    rb = GetComponent<Rigidbody2D>();
+    hurt = GetComponent<PlayerHurtResponse>();
+    catcher = GetComponent<BallCatcher>();
+}
+
+void Update()
+{
+    var kb = Keyboard.current;
+    if (kb == null) return;
+
+    moveX = 0f;
+    if (kb.aKey.isPressed || kb.leftArrowKey.isPressed) moveX = -1f;
+    if (kb.dKey.isPressed || kb.rightArrowKey.isPressed) moveX = 1f;
+
+    if (moveX > 0)
     {
-        rb = GetComponent<Rigidbody2D>();
-        //sr = GetComponent<SpriteRenderer>();
+        sr.flipX = false;
+        facing = 1;
+    }
+    else if (moveX < 0)
+    {
+        sr.flipX = true;
+        facing = -1;
     }
 
-    void Update()
+    if (catcher != null) catcher.SetFacing(facing);
+
+    if (feet != null && feet.IsGrounded) canDash = true;
+
+    jumpBufferCounter -= Time.deltaTime;
+    if (kb.spaceKey.wasPressedThisFrame) jumpBufferCounter = jumpBufferTime;
+
+    if (feet != null && feet.IsGrounded) coyoteTimer = coyoteTime;
+    else coyoteTimer -= Time.deltaTime;
+
+    fireCooldownLeft -= Time.deltaTime;
+
+    Dash();
+    Jump();
+    Shoot();
+}
+
+void FixedUpdate()
+{
+    if (isDashing)
     {
-        if (feet != null && feet.IsGrounded) canDash = true;
-
-        Dash();   // handle starting + timers
-        if (!isDashing)
-        {
-            Move();
-            jumpBufferCounter -= Time.deltaTime;
-            if (Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame) jumpBufferCounter = jumpBufferTime;
-
-            if (feet != null && feet.IsGrounded)
-                coyoteTimer = coyoteTime;
-            else
-                coyoteTimer -= Time.deltaTime;
-
-            Jump();
-            fireCooldownLeft -= Time.deltaTime;
-            Shoot();
-
-        }
+        rb.linearVelocity = new Vector2(facing * dashSpeed, 0f);
+        return;
     }
 
+    bool lockX = (hurt != null && hurt.LockHorizontal);
+    if (!lockX)
+    {
+        rb.linearVelocity = new Vector2(moveX * moveSpeed, rb.linearVelocity.y);
+    }
+}
 
     void Move()
     {
