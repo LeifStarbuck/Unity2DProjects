@@ -517,7 +517,7 @@ Transform:
   m_GameObject: {fileID: 6142869898067162572}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 93.90547, y: 30.809473, z: 0}
+  m_LocalPosition: {x: 94.04374, y: 30.5564, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -669,17 +669,17 @@ MonoBehaviour:
   groundProbe: {fileID: 231133167580898701}
   wallProbe: {fileID: 4906572626390042687}
   probeRadius: 0.2
-  bodyCollider: {fileID: 0}
+  bodyCollider: {fileID: 524328608173517765}
   visualRoot: {fileID: 5194640847830602454}
   eyesRoot: {fileID: 4997756732385276376}
   turnPause: 1
-  walkBobY: 0.04
-  walkBobSpeed: 10
-  blinkMinInterval: 1.2
-  blinkMaxInterval: 3.5
-  blinkDuration: 0.08
-  pauseLeanX: 0.18
-  pauseLeanSpeed: 6
+  walkBobY: 0.07
+  walkBobSpeed: 20
+  blinkMinInterval: 0.3
+  blinkMaxInterval: 0.6
+  blinkDuration: 0.3
+  pauseLeanX: 0.3
+  pauseLeanSpeed: 5
   turnAroundOnCritterContact: 1
   ignoreCritterCollisionTime: 0.15
   debug: 0
