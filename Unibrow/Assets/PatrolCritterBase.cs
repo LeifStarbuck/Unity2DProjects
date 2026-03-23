@@ -9,6 +9,8 @@ public abstract class PatrolCritterBase : MonoBehaviour
     [SerializeField] protected Transform groundProbe;
     [SerializeField] protected Transform wallProbe;
     [SerializeField] protected float probeRadius = 0.1f;
+    [SerializeField] protected float groundCheckDistance = 0.25f;
+    [SerializeField] protected float wallCheckDistance = 0.15f;
 
     [Header("Body")]
     [SerializeField] protected Collider2D bodyCollider;
@@ -59,6 +61,10 @@ public abstract class PatrolCritterBase : MonoBehaviour
     public Collider2D BodyCollider => bodyCollider;
     public bool IsInactive => isInactive;
 
+    // Local-space patrol directions
+    protected Vector2 MoveDirection => (Vector2)(transform.right * dir);
+    protected Vector2 SurfaceDirection => (Vector2)(-transform.up); // "down" in critter-local space
+
     protected virtual void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
@@ -85,7 +91,7 @@ public abstract class PatrolCritterBase : MonoBehaviour
         if (isPaused)
         {
             pauseTimer -= Time.fixedDeltaTime;
-            rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
+            rb.linearVelocity = Vector2.zero;
 
             DoPauseLean();
             EnsurePauseBlinkRunning(true);
@@ -107,14 +113,30 @@ public abstract class PatrolCritterBase : MonoBehaviour
             return;
         }
 
-        rb.linearVelocity = new Vector2(dir * speed, rb.linearVelocity.y);
+        rb.linearVelocity = MoveDirection * speed;
         DoWalkBob();
 
-        bool groundAhead = groundProbe != null &&
-                           Physics2D.Raycast(groundProbe.position, Vector2.down, 0.25f, groundLayer);
+        bool groundAhead = false;
+        if (groundProbe != null)
+        {
+            groundAhead = Physics2D.Raycast(
+                groundProbe.position,
+                SurfaceDirection,
+                groundCheckDistance,
+                groundLayer
+            );
+        }
 
-        bool wallAhead = wallProbe != null &&
-                         Physics2D.Raycast(wallProbe.position, new Vector2(dir, 0f), 0.15f, groundLayer);
+        bool wallAhead = false;
+        if (wallProbe != null)
+        {
+            wallAhead = Physics2D.Raycast(
+                wallProbe.position,
+                MoveDirection,
+                wallCheckDistance,
+                groundLayer
+            );
+        }
 
         if ((!groundAhead || wallAhead) && !pendingFlip)
         {
@@ -125,7 +147,10 @@ public abstract class PatrolCritterBase : MonoBehaviour
         {
             if (isGrounded != prevGrounded || groundAhead != prevGroundAhead || wallAhead != prevWallAhead)
             {
-                Debug.Log($"[{name}] grounded={isGrounded} groundAhead={groundAhead} wallAhead={wallAhead} dir={dir} vel={rb.linearVelocity}");
+                Debug.Log(
+                    $"[{name}] grounded={isGrounded} groundAhead={groundAhead} wallAhead={wallAhead} " +
+                    $"dir={dir} moveDir={MoveDirection} surfaceDir={SurfaceDirection} vel={rb.linearVelocity}"
+                );
             }
 
             prevGrounded = isGrounded;
@@ -140,38 +165,38 @@ public abstract class PatrolCritterBase : MonoBehaviour
         if (pauseTimer > 0f || pendingFlip) return;
         BeginTurnPause();
     }
-    
+
     protected virtual void BeginTurnPause()
     {
         pendingFlip = true;
         pauseTimer = turnPause;
-        rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
+        rb.linearVelocity = Vector2.zero;
     }
 
-    protected virtual void Flip()
+protected virtual void Flip()
+{
+    dir *= -1;
+
+    if (groundProbe != null)
     {
-        dir *= -1;
-
-        if (groundProbe != null)
-        {
-            Vector3 lp = groundProbe.localPosition;
-            groundProbe.localPosition = new Vector3(-lp.x, lp.y, lp.z);
-        }
-
-        if (wallProbe != null)
-        {
-            Vector3 lp = wallProbe.localPosition;
-            wallProbe.localPosition = new Vector3(-lp.x, lp.y, lp.z);
-        }
-
-        if (visualRoot != null)
-        {
-            Vector3 s = visualRoot.localScale;
-            visualRoot.localScale = new Vector3(Mathf.Abs(s.x) * dir, s.y, s.z);
-        }
-
-        rb.linearVelocity = new Vector2(dir * speed, rb.linearVelocity.y);
+        Vector3 lp = groundProbe.localPosition;
+        groundProbe.localPosition = new Vector3(-lp.x, lp.y, lp.z);
     }
+
+    if (wallProbe != null)
+    {
+        Vector3 lp = wallProbe.localPosition;
+        wallProbe.localPosition = new Vector3(-lp.x, lp.y, lp.z);
+    }
+
+    if (visualRoot != null)
+    {
+        Vector3 s = visualRoot.localScale;
+        visualRoot.localScale = new Vector3(Mathf.Abs(s.x) * dir, s.y, s.z);
+    }
+
+    rb.linearVelocity = MoveDirection * speed;
+}
 
     protected virtual void DoPauseLean()
     {
@@ -251,7 +276,6 @@ public abstract class PatrolCritterBase : MonoBehaviour
         if (isInactive) return;
         if (!turnAroundOnCritterContact) return;
 
-        //PatrolCritterBase otherCritter = collision.collider.GetComponent<PatrolCritterBase>();
         PatrolCritterBase otherCritter = collision.collider.GetComponentInParent<PatrolCritterBase>();
         if (otherCritter == null || otherCritter == this || otherCritter.IsInactive) return;
 
@@ -260,7 +284,13 @@ public abstract class PatrolCritterBase : MonoBehaviour
 
         if (BodyCollider != null && otherCritter.BodyCollider != null)
         {
-            StartCoroutine(TemporarilyIgnoreCollision(BodyCollider, otherCritter.BodyCollider, ignoreCritterCollisionTime));
+            StartCoroutine(
+                TemporarilyIgnoreCollision(
+                    BodyCollider,
+                    otherCritter.BodyCollider,
+                    ignoreCritterCollisionTime
+                )
+            );
         }
     }
 
@@ -281,9 +311,36 @@ public abstract class PatrolCritterBase : MonoBehaviour
         StopPauseBlink();
     }
 
-    protected virtual void OnDrawGizmosSelected()
+protected virtual void OnDrawGizmosSelected()
+{
+    if (!debug) return;
+
+    Gizmos.color = Color.green;
+    if (groundProbe != null)
     {
-        if (groundProbe != null) Gizmos.DrawWireSphere(groundProbe.position, probeRadius);
-        if (wallProbe != null) Gizmos.DrawWireSphere(wallProbe.position, probeRadius);
+        Vector2 surfaceDir = Application.isPlaying
+            ? SurfaceDirection
+            : (Vector2)(-transform.up);
+
+        Gizmos.DrawWireSphere(groundProbe.position, probeRadius);
+        Gizmos.DrawLine(
+            groundProbe.position,
+            groundProbe.position + (Vector3)(surfaceDir * groundCheckDistance)
+        );
     }
+
+    Gizmos.color = Color.red;
+    if (wallProbe != null)
+    {
+        Vector2 moveDir = Application.isPlaying
+            ? MoveDirection
+            : (Vector2)transform.right;
+
+        Gizmos.DrawWireSphere(wallProbe.position, probeRadius);
+        Gizmos.DrawLine(
+            wallProbe.position,
+            wallProbe.position + (Vector3)(moveDir.normalized * wallCheckDistance)
+        );
+    }
+}
 }
