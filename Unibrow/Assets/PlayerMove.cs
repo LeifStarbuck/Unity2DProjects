@@ -102,7 +102,6 @@ void Update()
 
     Dash();
     Jump();
-    Shoot();
 }
 
 void FixedUpdate()
@@ -257,32 +256,4 @@ void FixedUpdate()
         dust.Play();
         Destroy(dust.gameObject, 1f);
     }
-void Shoot()
-{
-    var kb = Keyboard.current;
-    if (kb == null) return;
-
-    fireCooldownLeft -= Time.deltaTime;
-
-    if (kb.kKey.wasPressedThisFrame && fireCooldownLeft <= 0f)
-    {
-        // Spawn
-        GameObject obj = Instantiate(bulletPrefab, firePoint.position, Quaternion.identity);
-
-        // Prevent bullet from knocking the player
-        var bulletCol = obj.GetComponent<Collider2D>();
-        var playerCol = GetComponent<Collider2D>();
-        if (bulletCol != null && playerCol != null)
-            Physics2D.IgnoreCollision(bulletCol, playerCol);
-
-        // Fire
-        var bullet = obj.GetComponent<Bullet>();
-        if (bullet != null)
-            bullet.Fire(facing);
-
-        fireCooldownLeft = fireCooldown;
-    }
-}
-
-
 }
