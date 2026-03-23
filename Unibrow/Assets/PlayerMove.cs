@@ -31,13 +31,6 @@ public class PlayerMove : MonoBehaviour
     [SerializeField] private float jumpBufferTime = 0.12f;
     private float jumpBufferCounter = 0f;
 
-    [Header("Gun")]
-[SerializeField] private GameObject bulletPrefab;
-[SerializeField] private Transform firePoint;
-[SerializeField] private float fireCooldown = 0.15f;
-private float fireCooldownLeft = 0f;
-
-
     private bool isGrounded;
     private int facing = 1;
 
@@ -51,15 +44,11 @@ private float fireCooldownLeft = 0f;
 
     private bool canDash = true;
 
-
     private float coyoteTimer = 0f;
 
-
-
-
-private float moveX;
-private PlayerHurtResponse hurt;
-private BallCatcher catcher;
+    private float moveX;
+    private PlayerHurtResponse hurt;
+    private BallCatcher catcher;
 
 void Awake()
 {
@@ -97,8 +86,6 @@ void Update()
 
     if (feet != null && feet.IsGrounded) coyoteTimer = coyoteTime;
     else coyoteTimer -= Time.deltaTime;
-
-    fireCooldownLeft -= Time.deltaTime;
 
     Dash();
     Jump();
