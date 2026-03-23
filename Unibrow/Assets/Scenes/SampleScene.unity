@@ -20433,7 +20433,7 @@ MonoBehaviour:
   hands: {fileID: 998091430}
   throwSpeed: 30
   throwUpForce: 5
-  lobSpeed: 10
+  lobSpeed: 0
   lobUpForce: 30
   catchZone: {fileID: 1895630526}
   recatchDelay: 0.25
