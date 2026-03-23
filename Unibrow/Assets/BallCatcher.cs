@@ -12,12 +12,6 @@ public class BallCatcher : MonoBehaviour
 
     [SerializeField] private float throwUpForce = 5f;
 
-
-
-
-
-
-
     private Vector3 handsLocalPosRight;
     private Vector3 catchZoneLocalPosRight;
 
@@ -77,44 +71,37 @@ public class BallCatcher : MonoBehaviour
             Physics2D.IgnoreCollision(heldBallCol, playerCol, true);
     }
 
-    void ThrowBall()
-    {
-        GameObject ball = heldBallRb.gameObject;
+void ThrowBall()
+{
+    GameObject ball = heldBallRb.gameObject;
+    Collider2D thrownCol = heldBallCol;
 
-        recatchTimer = recatchDelay;
+    recatchTimer = recatchDelay;
 
-        // Unparent
-        ball.transform.SetParent(null);
+    ball.transform.SetParent(null);
+    heldBallRb.simulated = true;
+    ball.transform.position = hands.position + new Vector3(0.6f * facing, 0f, 0f);
 
-        // Re-enable physics
-        heldBallRb.simulated = true;
+    heldBallRb.linearVelocity = new Vector2(
+        throwSpeed * facing,
+        Mathf.Max(throwUpForce, heldBallRb.linearVelocity.y)
+    );
 
-        // Put it slightly in front of the hands (prevents collision jitter)
-        ball.transform.position = hands.position + new Vector3(0.6f * facing, 0f, 0f);
+    StartCoroutine(ReenableCollisionSoon(thrownCol));
 
-        // Launch
-heldBallRb.linearVelocity = new Vector2(
-    throwSpeed * facing,
-    Mathf.Max(throwUpForce, heldBallRb.linearVelocity.y)
-);
+    heldBallRb = null;
+    heldBallCol = null;
+}
+
+System.Collections.IEnumerator ReenableCollisionSoon(Collider2D col)
+{
+    yield return new WaitForSeconds(0.15f);
+
+    if (col != null && playerCol != null)
+        Physics2D.IgnoreCollision(col, playerCol, false);
+}
 
 
-
-        // After a short time, re-enable collisions with player (optional)
-        StartCoroutine(ReenableCollisionSoon());
-
-        heldBallRb = null;
-        heldBallCol = null;
-    }
-
-    System.Collections.IEnumerator ReenableCollisionSoon()
-    {
-        var col = heldBallCol;
-        yield return new WaitForSeconds(0.15f);
-
-        if (col != null && playerCol != null)
-            Physics2D.IgnoreCollision(col, playerCol, false);
-    }
 
     // Optional: let other scripts (PlayerMove) update facing so throw direction matches.
     public void SetFacing(int dir)
