@@ -3,14 +3,18 @@ using UnityEngine.InputSystem;
 
 public class BallCatcher : MonoBehaviour
 {
+    [Header("Throw")]
     [SerializeField] private Transform hands;
     [SerializeField] private float throwSpeed = 30f;
+    [SerializeField] private float throwUpForce = 5f;
 
-    [SerializeField] private Transform catchZone; 
+    [Header("Lob")]
+    [SerializeField] private float lobSpeed = 10f;
+    [SerializeField] private float lobUpForce = 30f;
+
+    [SerializeField] private Transform catchZone;
     [SerializeField] private float recatchDelay = 0.25f;
     private float recatchTimer = 0f;
-
-    [SerializeField] private float throwUpForce = 5f;
 
     private Vector3 handsLocalPosRight;
     private Vector3 catchZoneLocalPosRight;
@@ -19,7 +23,7 @@ public class BallCatcher : MonoBehaviour
     private Collider2D heldBallCol;
 
     private Collider2D playerCol;
-    private int facing = 1; 
+    private int facing = 1;
 
     void Awake()
     {
@@ -34,88 +38,87 @@ public class BallCatcher : MonoBehaviour
         var kb = Keyboard.current;
         if (kb == null) return;
 
-        if (recatchTimer > 0f) recatchTimer -= Time.deltaTime;
+        if (recatchTimer > 0f)
+            recatchTimer -= Time.deltaTime;
 
-
-        // Throw on E
         if (kb.eKey.wasPressedThisFrame && heldBallRb != null)
-            ThrowBall();
-
+        {
+            bool lob = kb.wKey.isPressed || kb.upArrowKey.isPressed;
+            ThrowBall(lob);
+        }
     }
 
-    // Called by the CatchZone trigger (see next script) or you can place this directly on CatchZone.
     public void TryCatch(GameObject ball)
     {
-        if (heldBallRb != null) return; // already holding one
-
-        if (recatchTimer > 0f) return;  // check recatch cooldown for balls
-
+        if (heldBallRb != null) return;
+        if (recatchTimer > 0f) return;
         if (!ball.CompareTag("Basketball")) return;
 
         heldBallRb = ball.GetComponent<Rigidbody2D>();
         heldBallCol = ball.GetComponent<Collider2D>();
-        if (heldBallRb == null || heldBallCol == null) { heldBallRb = null; return; }
 
-        // Stop physics and "stick" to hands
+        if (heldBallRb == null || heldBallCol == null)
+        {
+            heldBallRb = null;
+            return;
+        }
+
         heldBallRb.linearVelocity = Vector2.zero;
         heldBallRb.angularVelocity = 0f;
-        heldBallRb.simulated = false; // key line: removes it from physics while held
+        heldBallRb.simulated = false;
 
-        // Parent to hands and snap position/rotation
         ball.transform.SetParent(hands);
         ball.transform.localPosition = Vector3.zero;
         ball.transform.localRotation = Quaternion.identity;
 
-        // Prevent immediate self-collisions when thrown
         if (playerCol != null && heldBallCol != null)
             Physics2D.IgnoreCollision(heldBallCol, playerCol, true);
     }
 
-void ThrowBall()
-{
-    GameObject ball = heldBallRb.gameObject;
-    Collider2D thrownCol = heldBallCol;
+    void ThrowBall(bool lob)
+    {
+        GameObject ball = heldBallRb.gameObject;
+        Collider2D thrownCol = heldBallCol;
 
-    recatchTimer = recatchDelay;
+        recatchTimer = recatchDelay;
 
-    ball.transform.SetParent(null);
-    heldBallRb.simulated = true;
-    ball.transform.position = hands.position + new Vector3(0.6f * facing, 0f, 0f);
+        ball.transform.SetParent(null);
+        heldBallRb.simulated = true;
 
-    heldBallRb.linearVelocity = new Vector2(
-        throwSpeed * facing,
-        Mathf.Max(throwUpForce, heldBallRb.linearVelocity.y)
-    );
+        ball.transform.position = hands.position + new Vector3(0.6f * facing, 0f, 0f);
 
-    StartCoroutine(ReenableCollisionSoon(thrownCol));
+        float xSpeed = lob ? lobSpeed : throwSpeed;
+        float ySpeed = lob ? lobUpForce : throwUpForce;
 
-    heldBallRb = null;
-    heldBallCol = null;
-}
+        heldBallRb.linearVelocity = new Vector2(
+            xSpeed * facing,
+            ySpeed
+        );
 
-System.Collections.IEnumerator ReenableCollisionSoon(Collider2D col)
-{
-    yield return new WaitForSeconds(0.15f);
+        StartCoroutine(ReenableCollisionSoon(thrownCol));
 
-    if (col != null && playerCol != null)
-        Physics2D.IgnoreCollision(col, playerCol, false);
-}
+        heldBallRb = null;
+        heldBallCol = null;
+    }
 
+    System.Collections.IEnumerator ReenableCollisionSoon(Collider2D col)
+    {
+        yield return new WaitForSeconds(0.15f);
 
+        if (col != null && playerCol != null)
+            Physics2D.IgnoreCollision(col, playerCol, false);
+    }
 
-    // Optional: let other scripts (PlayerMove) update facing so throw direction matches.
     public void SetFacing(int dir)
     {
         facing = (dir >= 0) ? 1 : -1;
 
-        // Mirror Hands
         hands.localPosition = new Vector3(
             Mathf.Abs(handsLocalPosRight.x) * facing,
             handsLocalPosRight.y,
             handsLocalPosRight.z
         );
 
-        // Mirror CatchZone too (optional but recommended)
         if (catchZone != null)
         {
             catchZone.localPosition = new Vector3(
@@ -124,14 +127,10 @@ System.Collections.IEnumerator ReenableCollisionSoon(Collider2D col)
                 catchZoneLocalPosRight.z
             );
         }
-
-
-}
-
+    }
 
     void OnCollisionEnter2D(Collision2D collision)
     {
         TryCatch(collision.gameObject);
     }
-
 }
