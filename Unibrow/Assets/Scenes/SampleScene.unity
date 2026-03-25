@@ -8730,6 +8730,7 @@ GameObject:
   - component: {fileID: 528509387}
   - component: {fileID: 528509385}
   - component: {fileID: 528509386}
+  - component: {fileID: 528509388}
   m_Layer: 0
   m_Name: VerticalShaftCamera
   m_TagString: Untagged
@@ -8826,6 +8827,18 @@ Transform:
   m_Children: []
   m_Father: {fileID: 686622130}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &528509388
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 528509384}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 79731c79be9e94d93bd6ef34bb29117d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CameraShake
 --- !u!1001 &529759542
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -11401,7 +11414,7 @@ GameObject:
   - component: {fileID: 744377792}
   - component: {fileID: 744377791}
   m_Layer: 5
-  m_Name: Canvas
+  m_Name: HUDCanvas
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -15613,6 +15626,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1023016128}
   - component: {fileID: 1023016127}
+  - component: {fileID: 1023016129}
   m_Layer: 0
   m_Name: HiddenRoomCamera
   m_TagString: Untagged
@@ -15678,6 +15692,18 @@ Transform:
   m_Children: []
   m_Father: {fileID: 517447898}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1023016129
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1023016126}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 79731c79be9e94d93bd6ef34bb29117d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CameraShake
 --- !u!1 &1024447315
 GameObject:
   m_ObjectHideFlags: 0
@@ -20257,7 +20283,7 @@ MonoBehaviour:
   feet: {fileID: 1430743591}
   dustOffset: {x: 0, y: -0.3}
   sr: {fileID: 1323186304}
-  jumpImpulse: 15
+  jumpImpulse: 17
   jumpCutMultiplier: 0.5
   holdForce: 20
   maxHoldTime: 0.15
@@ -27219,13 +27245,13 @@ MonoBehaviour:
     serializedVersion: 2
     rgba: 4294967295
   m_fontColor: {r: 1, g: 1, b: 1, a: 1}
-  m_enableVertexGradient: 1
-  m_colorMode: 1
+  m_enableVertexGradient: 0
+  m_colorMode: 0
   m_fontColorGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
-    topRight: {r: 0.21960784, g: 0.21960784, b: 0.21960784, a: 1}
+    topRight: {r: 1, g: 1, b: 1, a: 1}
     bottomLeft: {r: 1, g: 1, b: 1, a: 1}
-    bottomRight: {r: 0.21960784, g: 0.21960784, b: 0.21960784, a: 1}
+    bottomRight: {r: 1, g: 1, b: 1, a: 1}
   m_fontColorGradientPreset: {fileID: 0}
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
@@ -27242,7 +27268,7 @@ MonoBehaviour:
   m_fontSizeMin: 18
   m_fontSizeMax: 72
   m_fontStyle: 0
-  m_HorizontalAlignment: 4
+  m_HorizontalAlignment: 1
   m_VerticalAlignment: 256
   m_textAlignment: 65535
   m_characterSpacing: 0
@@ -28645,7 +28671,7 @@ GameObject:
   - component: {fileID: 1840314539}
   - component: {fileID: 1840314538}
   m_Layer: 5
-  m_Name: Canvas
+  m_Name: PauseMenuCanvas
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -31512,6 +31538,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2048661410}
   - component: {fileID: 2048661409}
+  - component: {fileID: 2048661411}
   m_Layer: 0
   m_Name: BossRoomCamera
   m_TagString: Untagged
@@ -31577,6 +31604,18 @@ Transform:
   m_Children: []
   m_Father: {fileID: 2137611345}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2048661411
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2048661408}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 79731c79be9e94d93bd6ef34bb29117d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CameraShake
 --- !u!1 &2051133712
 GameObject:
   m_ObjectHideFlags: 0
@@ -31588,6 +31627,7 @@ GameObject:
   - component: {fileID: 2051133715}
   - component: {fileID: 2051133713}
   - component: {fileID: 2051133714}
+  - component: {fileID: 2051133716}
   m_Layer: 0
   m_Name: HorizontalShaftCamera
   m_TagString: Untagged
@@ -31684,6 +31724,18 @@ Transform:
   m_Children: []
   m_Father: {fileID: 686622130}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2051133716
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2051133712}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 79731c79be9e94d93bd6ef34bb29117d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CameraShake
 --- !u!1 &2052292281
 GameObject:
   m_ObjectHideFlags: 0
@@ -34136,8 +34188,8 @@ SceneRoots:
   - {fileID: 991172482}
   - {fileID: 139934983}
   - {fileID: 744377794}
-  - {fileID: 955816439}
   - {fileID: 1840314541}
+  - {fileID: 955816439}
   - {fileID: 1471760851}
   - {fileID: 1863836155}
   - {fileID: 89254583}

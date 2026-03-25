@@ -9,16 +9,27 @@ public class CameraShake : MonoBehaviour
 
     void Awake()
     {
-        // In CM3, Noise is a component you add to the same CinemachineCamera GameObject
         noise = GetComponent<CinemachineBasicMultiChannelPerlin>();
 
         if (!noise)
-            Debug.LogError("CameraShake: Missing CinemachineBasicMultiChannelPerlin on this CinemachineCamera.", this);
+            Debug.LogError("CameraShake: Missing CinemachineBasicMultiChannelPerlin.", this);
+    }
+
+    void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.K))
+            Shake(2f, 0.25f);
     }
 
     public void Shake(float strength, float time)
     {
-        if (!noise) return;
+        if (!noise)
+        {
+            Debug.LogWarning("CameraShake: no noise component.", this);
+            return;
+        }
+
+        Debug.Log($"Shake called on {name} with strength {strength} for {time}s", this);
 
         if (co != null) StopCoroutine(co);
         co = StartCoroutine(ShakeRoutine(strength, time));

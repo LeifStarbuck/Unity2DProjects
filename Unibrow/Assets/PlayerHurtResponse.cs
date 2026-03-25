@@ -1,15 +1,16 @@
 using System.Collections;
 using UnityEngine;
+using Unity.Cinemachine;
 
 public class PlayerHurtResponse : MonoBehaviour
 {
     [SerializeField] private Rigidbody2D rb;
-    [SerializeField] private SpriteRenderer sprite;   // drag your player sprite renderer
+    [SerializeField] private SpriteRenderer sprite;
     [SerializeField] private float flashDuration = 0.12f;
+    [SerializeField] private CinemachineBrain cinemachineBrain;
 
     private bool invulnerable;
     private Color baseColor;
-
     private Health playerHealth;
 
     public bool LockHorizontal { get; private set; }
@@ -22,44 +23,46 @@ public class PlayerHurtResponse : MonoBehaviour
         if (!rb) rb = GetComponent<Rigidbody2D>();
         if (!sprite) sprite = GetComponentInChildren<SpriteRenderer>();
         if (sprite) baseColor = sprite.color;
-
         if (!playerHealth) playerHealth = GetComponent<Health>();
+        if (!cinemachineBrain) cinemachineBrain = FindFirstObjectByType<CinemachineBrain>();
 
-        // Loud, actionable errors instead of silent null refs later
         if (!rb) Debug.LogError("PlayerHurtResponse: Missing Rigidbody2D on Player.", this);
         if (!sprite) Debug.LogError("PlayerHurtResponse: Missing SpriteRenderer (child) on Player.", this);
         if (!playerHealth) Debug.LogError("PlayerHurtResponse: Missing Health component on Player.", this);
+        if (!cinemachineBrain) Debug.LogError("PlayerHurtResponse: Missing CinemachineBrain.", this);
     }
 
     public void TryHurt(Vector2 knockbackVelocity, float invulnTime)
     {
-        // Prevent NullReferenceException
         if (!rb || !playerHealth) return;
-
-        // Your local invuln gate
         if (invulnerable) return;
-
-        // Health i-frames gate (if Health owns i-frames)
         if (!playerHealth.CanTakeDamage()) return;
 
-        // Camera shake
-        FindFirstObjectByType<CameraShake>()?.Shake(4f, 0.25f); 
+        ShakeActiveCamera(4f, 0.25f);
 
-        // Apply damage first (only once per valid hit)
         playerHealth.TakeDamage(1);
 
         invulnerable = true;
         LockHorizontal = true;
-
-        // Apply knockback once
         rb.linearVelocity = knockbackVelocity;
 
-        // Stop only what we own (avoid cancelling unrelated coroutines)
         if (endHurtCo != null) StopCoroutine(endHurtCo);
         if (flashCo != null) StopCoroutine(flashCo);
 
         endHurtCo = StartCoroutine(EndHurt(invulnTime));
         flashCo = StartCoroutine(FlashRoutine());
+    }
+
+    private void ShakeActiveCamera(float strength, float time)
+    {
+        if (!cinemachineBrain) return;
+
+        var activeCam = cinemachineBrain.ActiveVirtualCamera as Component;
+        if (!activeCam) return;
+
+        var shake = activeCam.GetComponent<CameraShake>();
+        if (shake != null)
+            shake.Shake(strength, time);
     }
 
     private IEnumerator EndHurt(float t)
@@ -77,7 +80,6 @@ public class PlayerHurtResponse : MonoBehaviour
         sprite.color = Color.red;
         yield return new WaitForSeconds(flashDuration);
 
-        // Restore color (even if something changed it mid-flash)
         if (sprite) sprite.color = baseColor;
         flashCo = null;
     }
