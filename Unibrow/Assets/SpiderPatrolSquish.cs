@@ -186,16 +186,14 @@ public class SpiderPatrolSquish : PatrolCritterBase
         // Re-enable physics AFTER the squish animation so gravity can take over cleanly.
         rb.simulated = true;
         rb.linearVelocity = Vector2.zero;
-        rb.angularVelocity = 0f;
         rb.gravityScale = 3f;
 
-        // Let the corpse rotate a little, but settle quickly.
         rb.constraints = RigidbodyConstraints2D.None;
-        rb.angularDamping = 10f;
-        rb.angularVelocity = Mathf.Sign(incomingDir.x) * -25f;
 
+        Debug.Log($"constraints={rb.constraints}, angVel={rb.angularVelocity}, bodyType={rb.bodyType}");
         yield return new WaitForSeconds(corpseLifetime);
         Destroy(gameObject);
+        
     }
 
 private void ApplyDeadColliderShape()
