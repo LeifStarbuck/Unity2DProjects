@@ -1,4 +1,3 @@
-using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -6,9 +5,7 @@ public class NpcDialogueTrigger : MonoBehaviour
 {
     [Header("Dialogue")]
     [SerializeField] private DialogueBox dialogueBox;
-
-    [TextArea(2, 6)]
-    [SerializeField] private string[] pages;
+    [SerializeField] private DialogueLine[] lines;
 
     [Header("Optional Prompt")]
     [SerializeField] private GameObject talkPrompt;
@@ -19,33 +16,36 @@ public class NpcDialogueTrigger : MonoBehaviour
     {
         if (talkPrompt != null)
             talkPrompt.SetActive(false);
-    }
 
-private void Update()
-{
-    if (!playerInRange)
-        return;
-
-    if (dialogueBox != null && dialogueBox.IsOpen)
-        return;
-
-    if (Keyboard.current == null)
-        return;
-
-    if (Keyboard.current.eKey.wasPressedThisFrame)
-    {
         if (dialogueBox == null)
-        {
-            Debug.LogError("NpcDialogueTrigger: Cannot start dialogue because DialogueBox is null.", this);
-            return;
-        }
-
-        dialogueBox.StartDialogue(pages);
-
-        if (talkPrompt != null)
-            talkPrompt.SetActive(false);
+            Debug.LogError("NpcDialogueTrigger: DialogueBox is not assigned.", this);
     }
-}
+
+    private void Update()
+    {
+        if (!playerInRange)
+            return;
+
+        if (Keyboard.current == null)
+            return;
+
+        if (dialogueBox != null && dialogueBox.IsOpen)
+            return;
+
+        if (Keyboard.current.eKey.wasPressedThisFrame)
+        {
+            if (dialogueBox == null)
+            {
+                Debug.LogError("NpcDialogueTrigger: Cannot start dialogue because DialogueBox is null.", this);
+                return;
+            }
+
+            dialogueBox.StartDialogue(lines);
+
+            if (talkPrompt != null)
+                talkPrompt.SetActive(false);
+        }
+    }
 
     private void OnTriggerEnter2D(Collider2D other)
     {
@@ -54,7 +54,7 @@ private void Update()
 
         playerInRange = true;
 
-        if (talkPrompt != null)
+        if (talkPrompt != null && (dialogueBox == null || !dialogueBox.IsOpen))
             talkPrompt.SetActive(true);
     }
 

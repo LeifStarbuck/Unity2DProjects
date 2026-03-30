@@ -7,13 +7,14 @@ public class DialogueBox : MonoBehaviour
 {
     [Header("UI")]
     [SerializeField] private GameObject dialogueRoot;
+    [SerializeField] private TextMeshProUGUI speakerNameText;
     [SerializeField] private TextMeshProUGUI dialogueText;
 
     [Header("Typing")]
     [SerializeField] private float charactersPerSecond = 40f;
 
-    private string[] pages;
-    private int currentPage = 0;
+    private DialogueLine[] lines;
+    private int currentLineIndex = 0;
     private Coroutine typingCoroutine;
     private bool isTyping;
     private bool pageComplete;
@@ -26,18 +27,21 @@ public class DialogueBox : MonoBehaviour
             dialogueRoot.SetActive(false);
     }
 
-    public void StartDialogue(string[] newPages)
+    public void StartDialogue(DialogueLine[] newLines)
     {
-        if (newPages == null || newPages.Length == 0)
+        if (newLines == null || newLines.Length == 0)
         {
-            Debug.LogWarning("DialogueBox: StartDialogue called with no pages.", this);
+            Debug.LogWarning("DialogueBox: StartDialogue called with no lines.", this);
             return;
         }
 
-        pages = newPages;
-        currentPage = 0;
-        dialogueRoot.SetActive(true);
-        ShowPage(currentPage);
+        lines = newLines;
+        currentLineIndex = 0;
+
+        if (dialogueRoot != null)
+            dialogueRoot.SetActive(true);
+
+        ShowLine(currentLineIndex);
     }
 
     private void Update()
@@ -52,16 +56,16 @@ public class DialogueBox : MonoBehaviour
         {
             if (isTyping)
             {
-                FinishPageImmediately();
+                FinishLineImmediately();
             }
             else if (pageComplete)
             {
-                NextPage();
+                NextLine();
             }
         }
     }
 
-    private void ShowPage(int pageIndex)
+    private void ShowLine(int index)
     {
         if (typingCoroutine != null)
         {
@@ -69,25 +73,61 @@ public class DialogueBox : MonoBehaviour
             typingCoroutine = null;
         }
 
-        dialogueText.text = "";
+        DialogueLine line = lines[index];
+
+        if (speakerNameText != null)
+        {
+            speakerNameText.enableVertexGradient = false;
+            speakerNameText.colorGradientPreset = null;
+            speakerNameText.text = line.speakerName;
+            speakerNameText.color = line.speakerColor;
+            speakerNameText.ForceMeshUpdate();
+        }
+
+        if (dialogueText != null)
+        {
+            dialogueText.text = "";
+            dialogueText.color = Color.white; // or line.speakerColor if you want
+        }
+
         isTyping = false;
         pageComplete = false;
 
-        typingCoroutine = StartCoroutine(TypeText(pages[pageIndex]));
+        typingCoroutine = StartCoroutine(TypeText(line.text));
     }
 
     private IEnumerator TypeText(string fullText)
     {
-        dialogueText.text = "";
+        if (dialogueText == null)
+            yield break;
+
         isTyping = true;
         pageComplete = false;
 
-        float delay = 1f / Mathf.Max(1f, charactersPerSecond);
+        dialogueText.text = fullText;
+        dialogueText.maxVisibleCharacters = 0;
+        dialogueText.ForceMeshUpdate();
 
-        foreach (char c in fullText)
+        int totalVisibleCharacters = dialogueText.textInfo.characterCount;
+        float baseDelay = 1f / Mathf.Max(1f, charactersPerSecond);
+
+        for (int i = 0; i <= totalVisibleCharacters; i++)
         {
-            dialogueText.text += c;
-            yield return new WaitForSeconds(delay);
+            dialogueText.maxVisibleCharacters = i;
+
+            float wait = baseDelay;
+
+            if (i > 0 && i - 1 < fullText.Length)
+            {
+                char currentChar = fullText[i - 1];
+
+                if (currentChar == '.' || currentChar == '!' || currentChar == '?')
+                    wait *= 4f;
+                else if (currentChar == ',' || currentChar == ';')
+                    wait *= 2f;
+            }
+
+            yield return new WaitForSeconds(wait);
         }
 
         typingCoroutine = null;
@@ -95,7 +135,7 @@ public class DialogueBox : MonoBehaviour
         pageComplete = true;
     }
 
-    private void FinishPageImmediately()
+    private void FinishLineImmediately()
     {
         if (typingCoroutine != null)
         {
@@ -103,22 +143,28 @@ public class DialogueBox : MonoBehaviour
             typingCoroutine = null;
         }
 
-        dialogueText.text = pages[currentPage];
+        if (dialogueText != null)
+        {
+            dialogueText.text = lines[currentLineIndex].text;
+            dialogueText.ForceMeshUpdate();
+            dialogueText.maxVisibleCharacters = dialogueText.textInfo.characterCount;
+        }
+
         isTyping = false;
         pageComplete = true;
     }
 
-    private void NextPage()
+    private void NextLine()
     {
-        currentPage++;
+        currentLineIndex++;
 
-        if (currentPage >= pages.Length)
+        if (currentLineIndex >= lines.Length)
         {
             EndDialogue();
             return;
         }
 
-        ShowPage(currentPage);
+        ShowLine(currentLineIndex);
     }
 
     public void EndDialogue()
@@ -132,8 +178,14 @@ public class DialogueBox : MonoBehaviour
         isTyping = false;
         pageComplete = false;
 
+        if (speakerNameText != null)
+            speakerNameText.text = "";
+
         if (dialogueText != null)
+        {
             dialogueText.text = "";
+            dialogueText.maxVisibleCharacters = 999999;
+        }
 
         if (dialogueRoot != null)
             dialogueRoot.SetActive(false);
