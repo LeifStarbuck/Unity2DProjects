@@ -10,6 +10,7 @@ public class SpiderPatrolSquish : PatrolCritterBase
     [SerializeField] private float squishAnimTime = 0.05f;
     [SerializeField] private float corpseLifetime = 10f;
     [SerializeField] private float squishBounceAmount = 0.8f;
+    [SerializeField] private Collider2D headTriggerCollider;
 
     [Header("Squish By Physics Hits")]
     [SerializeField] private float minKillSpeed = 15f;
@@ -22,6 +23,9 @@ public class SpiderPatrolSquish : PatrolCritterBase
     [SerializeField] private float playerBounceBoostY = 15f;
     [SerializeField] private bool requireJumpHoldForBoost = true;
     [SerializeField] private float stompMinDownSpeed = 0.1f;
+
+    [SerializeField] private float deadColliderRadius = 0.1f;
+    [SerializeField] private Vector2 deadColliderOffset = new Vector2(0f, -0.05f);
     private Vector3 baseScale;
 
     protected override void Awake()
@@ -93,72 +97,113 @@ public class SpiderPatrolSquish : PatrolCritterBase
             StartCoroutine(SquishAndDie(sprayDir));
         }
     }
-private IEnumerator SquishAndDie(Vector2 incomingDir)
-{
-    SetInactive();
-
-    rb.linearVelocity = Vector2.zero;
-    rb.simulated = false;
-
-    Vector3 startScale = transform.localScale;
-    Vector3 finalScale = new Vector3(baseScale.x * squishX, baseScale.y * squishY, baseScale.z);
-
-    Vector3 overshootScale = new Vector3(
-        finalScale.x * (1f + squishBounceAmount),
-        finalScale.y * (1f - squishBounceAmount),
-        finalScale.z
-    );
-
-    Vector3 startPos = transform.localPosition;
-    Vector3 finalPos = startPos + new Vector3(0f, squishDig, 0f);
-
-    Vector3 overshootPos = finalPos + new Vector3(0f, squishDig * 0.2f, 0f);
-
-    Collider2D col2d = GetComponent<Collider2D>();
-    float halfWidth = col2d ? col2d.bounds.extents.x : 0.2f;
-
-    if (BloodFx.Instance != null)
+    private IEnumerator SquishAndDie(Vector2 incomingDir)
     {
-        BloodFx.Instance.SprayDirectional(
-            transform.position,
-            halfWidth,
-            incomingDir,
-            CgaPalette.Pair.LightRed_Red
+        SetInactive(); // stop patrol/AI logic so the spider becomes a corpse
+
+        ApplyDeadColliderShape(); // lots of issues with the modified dead body shape, so modify the collider accordingly
+
+        // Reset the visual child to its normal baseline before corpse posing.
+        if (visualRoot != null)
+            visualRoot.localPosition = visualBaseLocalPos;
+
+        // Disable the stomp trigger so the dead spider no longer responds like a live enemy.
+        if (headTriggerCollider != null)
+            headTriggerCollider.enabled = false;
+
+        // Move the root object to a harmless layer so the corpse stops interacting like an enemy.
+        int deadLayer = LayerMask.NameToLayer("DeadEnemy");
+        if (deadLayer != -1)
+            gameObject.layer = deadLayer;
+
+        // Turn physics off during the squash animation so Rigidbody2D does not fight our manual movement.
+        rb.linearVelocity = Vector2.zero;
+        rb.simulated = false;
+
+        Vector3 startScale = transform.localScale;
+        Vector3 finalScale = new Vector3(baseScale.x * squishX, baseScale.y * squishY, baseScale.z);
+
+        // Overshoot the squash slightly, then settle back for a cartoony bounce.
+        Vector3 overshootScale = new Vector3(
+            finalScale.x * (1f + squishBounceAmount),
+            finalScale.y * (1f - squishBounceAmount),
+            finalScale.z
         );
+
+        Vector3 startPos = transform.localPosition;
+        Vector3 finalPos = startPos + new Vector3(0f, squishDig, 0f);
+        Vector3 overshootPos = finalPos + new Vector3(0f, squishDig * 0.2f, 0f);
+
+        Collider2D col2d = GetComponent<Collider2D>();
+        float halfWidth = col2d ? col2d.bounds.extents.x : 0.2f;
+
+        if (BloodFx.Instance != null)
+        {
+            BloodFx.Instance.SprayDirectional(
+                transform.position,
+                halfWidth,
+                incomingDir,
+                CgaPalette.Pair.LightRed_Red
+            );
+        }
+
+        float squashInTime = squishAnimTime * 0.65f;
+        float settleTime = squishAnimTime * 0.35f;
+
+        float t = 0f;
+        while (t < squashInTime)
+        {
+            t += Time.deltaTime;
+            float k = Mathf.Clamp01(t / squashInTime);
+
+            // First phase: hit the oversquash pose.
+            transform.localScale = Vector3.Lerp(startScale, overshootScale, k);
+            transform.localPosition = Vector3.Lerp(startPos, overshootPos, k);
+
+            yield return null;
+        }
+
+        t = 0f;
+        while (t < settleTime)
+        {
+            t += Time.deltaTime;
+            float k = Mathf.Clamp01(t / settleTime);
+
+            // Second phase: settle from oversquash into the final corpse pose.
+            transform.localScale = Vector3.Lerp(overshootScale, finalScale, k);
+            transform.localPosition = Vector3.Lerp(overshootPos, finalPos, k);
+
+            yield return null;
+        }
+
+        // Lock in the final corpse shape/position on the root.
+        transform.localScale = finalScale;
+        transform.localPosition = finalPos;
+
+        if (visualRoot != null)
+            visualRoot.localPosition = visualBaseLocalPos;
+
+        // Re-enable physics AFTER the squish animation so gravity can take over cleanly.
+        rb.simulated = true;
+        rb.linearVelocity = Vector2.zero;
+        rb.angularVelocity = 0f;
+        rb.gravityScale = 3f;
+
+        // Let the corpse rotate a little, but settle quickly.
+        rb.constraints = RigidbodyConstraints2D.None;
+        rb.angularDamping = 10f;
+        rb.angularVelocity = Mathf.Sign(incomingDir.x) * -25f;
+
+        yield return new WaitForSeconds(corpseLifetime);
+        Destroy(gameObject);
     }
 
-    float squashInTime = squishAnimTime * 0.65f;
-    float settleTime = squishAnimTime * 0.35f;
-
-    float t = 0f;
-    while (t < squashInTime)
+private void ApplyDeadColliderShape()
+{
+    if (bodyCollider is CircleCollider2D circle)
     {
-        t += Time.deltaTime;
-        float k = Mathf.Clamp01(t / squashInTime);
-
-        transform.localScale = Vector3.Lerp(startScale, overshootScale, k);
-        transform.localPosition = Vector3.Lerp(startPos, overshootPos, k);
-
-        yield return null;
+        circle.radius = deadColliderRadius;
+        circle.offset = deadColliderOffset;
     }
-
-    t = 0f;
-    while (t < settleTime)
-    {
-        t += Time.deltaTime;
-        float k = Mathf.Clamp01(t / settleTime);
-
-        transform.localScale = Vector3.Lerp(overshootScale, finalScale, k);
-        transform.localPosition = Vector3.Lerp(overshootPos, finalPos, k);
-
-        yield return null;
-    }
-
-    transform.localScale = finalScale;
-    transform.localPosition = finalPos;
-
-    yield return new WaitForSeconds(corpseLifetime);
-    Destroy(gameObject);
 }
-
 }
